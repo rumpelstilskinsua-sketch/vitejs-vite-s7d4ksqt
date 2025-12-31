@@ -50,7 +50,8 @@ const Game: React.FC = () => {
   });
 
   const getPaddleY = useCallback((h: number, type: string) => {
-    if (type === 'mobile') return h * 0.92;
+    // Adjusted mobile paddle position: 7% lower than before (from 0.72 to 0.79)
+    if (type === 'mobile') return h * 0.79;
     if (type === 'tablet') return h * 0.75;
     return h - 60;
   }, []);
@@ -314,12 +315,12 @@ const Game: React.FC = () => {
     const currentSpeed = BALL_SPEED * gameState.speedMultiplier;
     const currentPixelSize = getDynamicPixelSize(grid[0].length);
 
-    // 1. Paddle Movement
+    // 1. Paddle Movement (Process movement before collision)
     if (keysRef.current['ArrowLeft']) paddle.x -= PADDLE_SPEED;
     if (keysRef.current['ArrowRight']) paddle.x += PADDLE_SPEED;
     paddle.x = Math.max(0, Math.min(dimensions.width - paddle.width, paddle.x));
 
-    // 2. Projectile Update (ONLY LEVEL 2 HAS PROJECTILES)
+    // 2. Projectile Update (Level 2 Fire)
     projectilesRef.current = projectilesRef.current.filter(p => {
       p.y += p.vy;
 
@@ -340,15 +341,15 @@ const Game: React.FC = () => {
         if (anyBallHit) playSound('hit');
       }
 
-      // Paddle collision
+      // Paddle collision - Robust check ensures it works during paddle movement
       if (
         p.x < paddle.x + paddle.width &&
         p.x + p.width > paddle.x &&
         p.y < paddle.y + paddle.height &&
         p.y + p.height > paddle.y
       ) {
-        const holeX = p.x - paddle.x;
-        paddle.holes.push({ x: holeX, width: p.width });
+        const relativeX = p.x - paddle.x;
+        paddle.holes.push({ x: relativeX, width: p.width });
         playSound('hit');
         return false;
       }
@@ -773,13 +774,21 @@ const Game: React.FC = () => {
 
         {gameState.isPaused && gameState.view === 'playing' && (
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20">
-            <h2 className="text-2xl md:text-4xl mb-6 text-yellow-400 animate-pulse tracking-widest">PAUSED</h2>
-            <button
-              onClick={togglePauseLocal}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1"
-            >
-              RESUME
-            </button>
+            <h2 className="text-2xl md:text-4xl mb-8 text-yellow-400 animate-pulse tracking-widest">PAUSED</h2>
+            <div className="flex flex-col gap-4 w-full max-w-xs px-4">
+              <button
+                onClick={togglePauseLocal}
+                className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1"
+              >
+                RESUME
+              </button>
+              <button
+                onClick={() => setView('start')}
+                className="bg-red-600 hover:bg-red-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-red-800 active:border-b-0 active:translate-y-1"
+              >
+                QUIT TO MENU
+              </button>
+            </div>
           </div>
         )}
 
