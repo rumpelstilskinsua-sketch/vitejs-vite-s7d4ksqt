@@ -1,4 +1,3 @@
-
 import { PixelType } from './types';
 
 export const PADDLE_WIDTH = 120;
@@ -6,10 +5,18 @@ export const PADDLE_HEIGHT = 15;
 export const PADDLE_SPEED = 8;
 export const BALL_RADIUS = 6;
 export const BALL_SPEED = 4; 
-export const PIXEL_SIZE = 10;
+export const PIXEL_SIZE = 8; // Optimal for 32x32 grid
 
-// Wizard sprite: 32x32 grid - HOLES REMOVED
-export const CHARACTER_DATA: number[][] = [
+export const FIRE_SPEED = 1.5; 
+export const FIRE_DATA: number[][] = [
+  [0, 1, 0],
+  [1, 2, 1],
+  [1, 2, 1],
+  [0, 1, 0]
+];
+
+// Level 1: Wizard sprite (32x32)
+export const WIZARD_DATA: number[][] = [
   [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0], 
   [0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0], 
   [0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
@@ -45,6 +52,35 @@ export const CHARACTER_DATA: number[][] = [
   [0,0,0,0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0],
 ];
 
+// Spider sprite for Level 2 (Simple placeholder pattern)
+export const SPIDER_64_DATA: number[][] = Array(32).fill(0).map((_, y) => 
+  Array(32).fill(0).map((_, x) => {
+    const dx = x - 16;
+    const dy = y - 16;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 6) return PixelType.SPIDER_BODY_DARK;
+    if (dist < 8) return PixelType.SPIDER_BODY_LIME;
+    if (Math.abs(dx) > 6 && Math.abs(dy) < 2) return PixelType.SPIDER_LEGS;
+    if (Math.abs(dy) > 6 && Math.abs(dx) < 2) return PixelType.SPIDER_LEGS;
+    return 0;
+  })
+);
+
+// Little Ghost sprite (12x12)
+export const GHOST_DATA: number[][] = [
+  [0,0,0,13,13,13,13,13,0,0,0],
+  [0,0,13,13,13,13,13,13,13,0,0],
+  [0,13,13,13,13,13,13,13,13,13,0],
+  [13,13,13,13,13,13,13,13,13,13,13],
+  [13,13,14,14,13,13,14,14,13,13,13],
+  [13,13,14,14,13,13,14,14,13,13,13],
+  [13,13,13,13,13,13,13,13,13,13,13],
+  [13,13,13,13,13,13,13,13,13,13,13],
+  [13,13,13,13,13,13,13,13,13,13,13],
+  [13,13,13,13,13,13,13,13,13,13,13],
+  [13,0,13,0,13,0,13,0,13,0,13]
+];
+
 export const COLORS = {
   PADDLE: '#FACC15',
   BALL: '#FFFFFF',
@@ -53,5 +89,24 @@ export const COLORS = {
   WIZARD_SKIN: '#FDBA74',
   WIZARD_BROWN: '#78350F',
   WIZARD_BLACK: '#020617',
+  GHOST_PINK: '#FF007F',
+  GHOST_BLUE: '#00F3FF',
+  GHOST_EYE: '#FFFFFF',
+  FIRE_ORANGE: '#FF4500', 
+  FIRE_YELLOW: '#FFD700', 
   BG: '#111827',
+  SPIDER_BODY_LIME: '#39FF14',
+  SPIDER_BODY_GREEN: '#16A34A',
+  SPIDER_BODY_DARK: '#064E3B',
+  SPIDER_LEGS: '#9CA3AF',
 };
+
+export const NEON_COLORS = [
+  '#39FF14', // Neon Green
+  '#FF007F', // Neon Pink
+  '#00F3FF', // Neon Blue
+  '#FAFF00', // Neon Yellow
+  '#BC13FE', // Neon Purple
+  '#FF5F1F', // Neon Orange
+  '#FF3131', // Neon Red
+];
