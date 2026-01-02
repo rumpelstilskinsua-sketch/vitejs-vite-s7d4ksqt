@@ -14,7 +14,7 @@ import {
   COLORS,
   NEON_COLORS
 } from '../constants';
-import { Ball, Paddle, PixelType, GameState, GameView, Ghost, Projectile } from '../types';
+import { Ball, Paddle, PixelType, GameState, GameView, Ghost, Projectile, Particle } from '../types';
 
 interface TrailPoint {
   x: number;
@@ -33,7 +33,6 @@ const Game: React.FC = () => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   
-  // Initialize speed from localStorage if available
   const [gameState, setGameState] = useState<GameState>(() => {
     const savedSpeed = localStorage.getItem(SPEED_STORAGE_KEY);
     return {
@@ -50,7 +49,6 @@ const Game: React.FC = () => {
   });
 
   const getPaddleY = useCallback((h: number, type: string) => {
-    // Adjusted mobile paddle position: 7% lower than before (from 0.72 to 0.79)
     if (type === 'mobile') return h * 0.79;
     if (type === 'tablet') return h * 0.75;
     return h - 60;
@@ -70,6 +68,7 @@ const Game: React.FC = () => {
   const trailRef = useRef<{ [key: number]: TrailPoint[] }>({});
   const charGridRef = useRef<number[][]>(WIZARD_DATA.map(row => [...row]));
   const ghostsRef = useRef<Ghost[]>([]);
+  const particlesRef = useRef<Particle[]>([]);
   const keysRef = useRef<{ [key: string]: boolean }>({});
   const animationFrameRef = useRef<number | undefined>(undefined);
   const frameCounterRef = useRef<number>(0);
@@ -105,7 +104,6 @@ const Game: React.FC = () => {
     return () => window.removeEventListener('resize', updateDimensions);
   }, [updateDimensions]);
 
-  // Persist speed multiplier changes
   useEffect(() => {
     localStorage.setItem(SPEED_STORAGE_KEY, gameState.speedMultiplier.toString());
   }, [gameState.speedMultiplier]);
@@ -190,6 +188,20 @@ const Game: React.FC = () => {
     }
   }, [gameState.isPaused]);
 
+  const createExplosion = (x: number, y: number, color: string) => {
+    for (let i = 0; i < 20; i++) {
+      particlesRef.current.push({
+        x,
+        y,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6,
+        life: 1.0,
+        color,
+        size: Math.random() * 4 + 2
+      });
+    }
+  };
+
   const initGame = useCallback((lvl: number = 1) => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -219,6 +231,7 @@ const Game: React.FC = () => {
     
     projectilesRef.current = [];
     trailRef.current = {};
+    particlesRef.current = [];
     charGridRef.current = (lvl === 1 ? WIZARD_DATA : SPIDER_64_DATA).map(row => [...row]);
     
     const spawnAreas = [
@@ -233,7 +246,7 @@ const Game: React.FC = () => {
       const gw = GHOST_DATA[0].length * gPixelSize;
       const gh = GHOST_DATA.length * gPixelSize;
       
-      return {
+      const ghost: Ghost = {
         id: `ghost-${index}`,
         x: dimensions.width * area.x - gw / 2,
         y: dimensions.height * area.y - gh / 2,
@@ -245,8 +258,15 @@ const Game: React.FC = () => {
         pixelSize: gPixelSize,
         isSmallest: index === 0,
         isLargest: index === 5,
-        fireCooldown: lvl === 2 ? 180 : 0 
+        fireCooldown: lvl >= 2 ? 180 : 0 
       };
+
+      if (lvl === 4 && index === 3) {
+        ghost.health = 30;
+        ghost.maxHealth = 30;
+      }
+
+      return ghost;
     });
 
     setGameState(prev => ({ 
@@ -315,16 +335,18 @@ const Game: React.FC = () => {
     const currentSpeed = BALL_SPEED * gameState.speedMultiplier;
     const currentPixelSize = getDynamicPixelSize(grid[0].length);
 
-    // 1. Paddle Movement (Process movement before collision)
+    particlesRef.current = particlesRef.current.filter(p => {
+      p.x += p.vx; p.y += p.vy;
+      p.life -= 0.02;
+      return p.life > 0;
+    });
+
     if (keysRef.current['ArrowLeft']) paddle.x -= PADDLE_SPEED;
     if (keysRef.current['ArrowRight']) paddle.x += PADDLE_SPEED;
     paddle.x = Math.max(0, Math.min(dimensions.width - paddle.width, paddle.x));
 
-    // 2. Projectile Update (Level 2 Fire)
     projectilesRef.current = projectilesRef.current.filter(p => {
       p.y += p.vy;
-
-      // Hitting balls (Piercing effect)
       if (ballsRef.current.length > 1) {
         let anyBallHit = false;
         ballsRef.current = ballsRef.current.filter(ball => {
@@ -341,7 +363,6 @@ const Game: React.FC = () => {
         if (anyBallHit) playSound('hit');
       }
 
-      // Paddle collision - Robust check ensures it works during paddle movement
       if (
         p.x < paddle.x + paddle.width &&
         p.x + p.width > paddle.x &&
@@ -356,14 +377,12 @@ const Game: React.FC = () => {
       return p.y < dimensions.height;
     });
 
-    // 3. Balls update
     let activeBalls = [...ballsRef.current];
     const newSpawnedBalls: Ball[] = [];
     const ballsToRemove: number[] = [];
 
     for (let bIdx = 0; bIdx < activeBalls.length; bIdx++) {
       const ball = activeBalls[bIdx];
-      
       if (!trailRef.current[ball.id]) trailRef.current[ball.id] = [];
       trailRef.current[ball.id].push({ x: ball.x, y: ball.y, color: ball.color });
       if (trailRef.current[ball.id].length > 15) trailRef.current[ball.id].shift();
@@ -371,7 +390,6 @@ const Game: React.FC = () => {
       ball.x += ball.dx;
       ball.y += ball.dy;
 
-      // Wall collision
       if (ball.x + ball.radius > dimensions.width) {
         ball.dx = -Math.abs(ball.dx); ball.x = dimensions.width - ball.radius; playSound('wall');
       } else if (ball.x - ball.radius < 0) {
@@ -381,13 +399,11 @@ const Game: React.FC = () => {
         ball.dy = Math.abs(ball.dy); ball.y = ball.radius; playSound('wall');
       }
 
-      // Death condition
       if (ball.y + ball.radius > dimensions.height) {
         ballsToRemove.push(ball.id);
         continue;
       }
 
-      // Paddle collision
       if (
         ball.y + ball.radius > paddle.y &&
         ball.y - ball.radius < paddle.y + paddle.height &&
@@ -411,9 +427,9 @@ const Game: React.FC = () => {
         }
       }
 
-      // Ghost collision
       let overlappedGhostId: string | undefined = undefined;
       for (const ghost of ghosts) {
+        if (ghost.isDead) continue;
         if (
           ball.x + ball.radius > ghost.x &&
           ball.x - ball.radius < ghost.x + ghost.width &&
@@ -422,6 +438,15 @@ const Game: React.FC = () => {
         ) {
           overlappedGhostId = ghost.id;
           
+          if (ghost.health !== undefined) {
+            ghost.health -= 1;
+            if (ghost.health <= 0) {
+              ghost.isDead = true;
+              createExplosion(ghost.x + ghost.width / 2, ghost.y + ghost.height / 2, COLORS.GHOST_BLUE);
+              setGameState(prev => ({ ...prev, score: prev.score + 1000 }));
+            }
+          }
+
           if (ghost.isSmallest && ball.lastSpawnId !== ghost.id) {
             if (activeBalls.length + newSpawnedBalls.length < MAX_BALLS) {
               newSpawnedBalls.push({
@@ -438,7 +463,6 @@ const Game: React.FC = () => {
             }
           }
           ball.lastSpawnId = ghost.id;
-
           ghost.isHit = !ghost.isHit;
           if (ghost.isHit) setGameState(prev => ({ ...prev, score: prev.score + 50 }));
           playSound('ghost');
@@ -457,12 +481,8 @@ const Game: React.FC = () => {
           break; 
         }
       }
-      
-      if (!overlappedGhostId) {
-        ball.lastSpawnId = undefined;
-      }
+      if (!overlappedGhostId) ball.lastSpawnId = undefined;
 
-      // Grid collision
       const charWidth = grid[0].length * currentPixelSize;
       const charHeight = grid.length * currentPixelSize;
       const charX = (dimensions.width - charWidth) / 2;
@@ -491,8 +511,8 @@ const Game: React.FC = () => {
       playSound('lose');
     }
 
-    // 4. Ghost movement and Fire Logic
-    for (const ghost of ghosts) {
+    ghostsRef.current = ghosts.filter(g => !g.isDead);
+    ghostsRef.current.forEach((ghost, index) => {
       ghost.x += ghost.vx; ghost.y += ghost.vy;
       if (ghost.x <= 0) { ghost.vx = Math.abs(ghost.vx); ghost.x = 0; }
       else if (ghost.x + ghost.width >= dimensions.width) { ghost.vx = -Math.abs(ghost.vx); ghost.x = dimensions.width - ghost.width; }
@@ -503,8 +523,12 @@ const Game: React.FC = () => {
         ghost.y = dimensions.height * 0.7 - ghost.height; 
       }
 
-      // MODIFIED FIRE LOGIC: Only Level 2, Only if 2 or more balls, and every 3s
-      if (gameState.level === 2 && ghost.isLargest) {
+      const isFiringGhost = 
+        (gameState.level === 2 && ghost.isLargest) || 
+        (gameState.level === 3 && (ghost.isLargest || index === 4)) ||
+        (gameState.level === 4 && (ghost.isLargest || ghost.id === 'ghost-4' || ghost.id === 'ghost-3'));
+
+      if (isFiringGhost) {
         if ((ghost.fireCooldown || 0) <= 0 && ballsRef.current.length >= 2) {
           projectilesRef.current.push({
             id: Date.now() + Math.random(),
@@ -515,25 +539,32 @@ const Game: React.FC = () => {
             width: 15,
             height: 20
           });
-          ghost.fireCooldown = 180; // Reset timer
+          ghost.fireCooldown = 180; 
           playSound('spawn');
         }
       }
-
       if ((ghost.fireCooldown || 0) > 0) ghost.fireCooldown! -= 1;
-    }
+    });
 
     const remaining = grid.flat().some(p => p !== PixelType.EMPTY);
     if (!remaining) {
-      if (gameState.level === 1) {
+      if (gameState.level < 4) {
         setGameState(prev => ({ ...prev, isLevelCleared: true, started: false }));
-        playSound('win');
+        if (deviceType === 'desktop') {
+          playSound('win');
+        } else {
+          if ('vibrate' in navigator) navigator.vibrate(200);
+        }
       } else {
         setGameState(prev => ({ ...prev, isWin: true, started: false }));
-        playSound('win');
+        if (deviceType === 'desktop') {
+          playSound('win');
+        } else {
+          if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 300]);
+        }
       }
     }
-  }, [gameState.isPaused, gameState.started, gameState.view, gameState.speedMultiplier, gameState.level, gameState.isWin, gameState.isGameOver, gameState.isLevelCleared, getDynamicPixelSize, playSound, dimensions.width, dimensions.height]);
+  }, [gameState.isPaused, gameState.started, gameState.view, gameState.speedMultiplier, gameState.level, gameState.isWin, gameState.isGameOver, gameState.isLevelCleared, getDynamicPixelSize, playSound, dimensions.width, dimensions.height, deviceType]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -546,10 +577,16 @@ const Game: React.FC = () => {
 
     if (gameState.view !== 'playing' && !gameState.isGameOver && !gameState.isWin && !gameState.isLevelCleared) return;
 
+    particlesRef.current.forEach(p => {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
+    });
+    ctx.globalAlpha = 1.0;
+
     const neonIndex = Math.floor(frameCounterRef.current / 8) % NEON_COLORS.length;
     const neonColor = NEON_COLORS[neonIndex];
 
-    // Draw Projectiles
     projectilesRef.current.forEach(p => {
       const pScale = p.width / FIRE_DATA[0].length;
       ctx.save();
@@ -565,7 +602,6 @@ const Game: React.FC = () => {
       ctx.restore();
     });
 
-    // Draw Ghosts
     ghostsRef.current.forEach(ghost => {
       const gGrid = GHOST_DATA;
       const gPixelSize = ghost.pixelSize;
@@ -584,10 +620,32 @@ const Game: React.FC = () => {
           ctx.fillRect(ghost.x + x * gPixelSize, ghost.y + y * gPixelSize, gPixelSize, gPixelSize);
         }
       }
+
+      if (ghost.health !== undefined && ghost.maxHealth !== undefined) {
+        const barW = ghost.width;
+        const barH = 8;
+        const barX = ghost.x;
+        const barY = ghost.y - 18;
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(barX, barY, barW, barH);
+        
+        const currentW = (ghost.health / ghost.maxHealth) * barW;
+        ctx.fillStyle = '#FF3131'; // Barra de salud Roja (Neon Red)
+        ctx.fillRect(barX, barY, currentW, barH);
+        
+        ctx.save();
+        ctx.strokeStyle = '#00F3FF'; // Contorno Azul Brillante (Neon Blue)
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#00F3FF';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(barX, barY, barW, barH);
+        ctx.restore();
+      }
+
       ctx.restore();
     });
 
-    // Draw Grid
     const grid = charGridRef.current;
     const currentPixelSize = getDynamicPixelSize(grid[0].length);
     const charWidth = grid[0].length * currentPixelSize;
@@ -634,7 +692,6 @@ const Game: React.FC = () => {
     }
     ctx.restore();
 
-    // Draw Balls and Trails
     ballsRef.current.forEach(ball => {
       const points = trailRef.current[ball.id] || [];
       points.forEach((point, index) => {
@@ -738,29 +795,27 @@ const Game: React.FC = () => {
         )}
 
         {gameState.view === 'levelSelect' && (
-          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-8 text-center z-20">
+          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
             <h2 className="text-lg md:text-2xl mb-12 text-yellow-400 uppercase tracking-widest">SELECT LEVEL</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl">
-              <button
-                onClick={() => initGame(1)}
-                className="group flex flex-col items-center p-6 bg-blue-900/30 border-2 border-blue-600 hover:bg-blue-600/20 transition-all rounded-lg"
-              >
-                <div className="w-16 h-16 bg-blue-500/20 mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                   <div className="w-8 h-8 bg-blue-400 rounded-sm shadow-[0_0_10px_#60a5fa]" />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-5xl px-4">
+              <button onClick={() => initGame(1)} className="group flex flex-col items-center p-6 bg-blue-900/30 border-2 border-blue-600 hover:bg-blue-600/20 transition-all rounded-lg">
                 <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 1</span>
                 <span className="text-[8px] text-blue-300">NO FIRE</span>
               </button>
 
-              <button
-                onClick={() => initGame(2)}
-                className="group flex flex-col items-center p-6 bg-red-900/30 border-2 border-red-600 hover:bg-red-600/20 transition-all rounded-lg"
-              >
-                <div className="w-16 h-16 bg-red-500/20 mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                   <div className="w-8 h-8 bg-red-400 rounded-sm shadow-[0_0_10px_#ef4444]" />
-                </div>
+              <button onClick={() => initGame(2)} className="group flex flex-col items-center p-6 bg-red-900/30 border-2 border-red-600 hover:bg-red-600/20 transition-all rounded-lg">
                 <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 2</span>
-                <span className="text-[8px] text-red-300">FIRE IF 2+ BALLS</span>
+                <span className="text-[8px] text-red-300">1 FIRE GHOST</span>
+              </button>
+
+              <button onClick={() => initGame(3)} className="group flex flex-col items-center p-6 bg-orange-900/30 border-2 border-orange-600 hover:bg-orange-600/20 transition-all rounded-lg">
+                <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 3</span>
+                <span className="text-[8px] text-orange-300">2 FIRE GHOSTS</span>
+              </button>
+
+              <button onClick={() => initGame(4)} className="group flex flex-col items-center p-6 bg-purple-900/30 border-2 border-purple-600 hover:bg-purple-600/20 transition-all rounded-lg">
+                <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 4</span>
+                <span className="text-[8px] text-purple-300">ELITE GHOST</span>
               </button>
             </div>
             <button
@@ -776,18 +831,8 @@ const Game: React.FC = () => {
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20">
             <h2 className="text-2xl md:text-4xl mb-8 text-yellow-400 animate-pulse tracking-widest">PAUSED</h2>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4">
-              <button
-                onClick={togglePauseLocal}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1"
-              >
-                RESUME
-              </button>
-              <button
-                onClick={() => setView('start')}
-                className="bg-red-600 hover:bg-red-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-red-800 active:border-b-0 active:translate-y-1"
-              >
-                QUIT TO MENU
-              </button>
+              <button onClick={togglePauseLocal} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">RESUME</button>
+              <button onClick={() => setView('start')} className="bg-red-600 hover:bg-red-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-red-800 active:border-b-0 active:translate-y-1">QUIT TO MENU</button>
             </div>
           </div>
         )}
@@ -798,17 +843,12 @@ const Game: React.FC = () => {
             <p className="text-[10px] md:text-xs mb-8 text-gray-300">THE TRUE CHALLENGE AWAITS...</p>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4">
               <button
-                onClick={() => initGame(2)}
+                onClick={() => initGame(gameState.level + 1)}
                 className="bg-green-600 hover:bg-green-500 text-white px-8 py-4 text-xs transition-all border-b-4 border-green-800 active:border-b-0 active:translate-y-1"
               >
-                PROCEED TO LEVEL 2
+                PROCEED TO LEVEL {gameState.level + 1}
               </button>
-              <button
-                onClick={() => setView('levelSelect')}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 text-[10px] transition-all border-b-4 border-gray-900 active:border-b-0 active:translate-y-1"
-              >
-                RETURN TO MENU
-              </button>
+              <button onClick={() => setView('levelSelect')} className="bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 text-[10px] transition-all border-b-4 border-gray-900 active:border-b-0 active:translate-y-1">RETURN TO MENU</button>
             </div>
           </div>
         )}
@@ -820,18 +860,8 @@ const Game: React.FC = () => {
             </h2>
             <p className="text-xs md:text-sm mb-8">FINAL SCORE: {gameState.score}</p>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4">
-              <button
-                onClick={() => initGame(gameState.level)}
-                className="bg-white text-black px-8 py-4 text-xs transition-all border-b-4 border-gray-400 active:border-b-0 active:translate-y-1"
-              >
-                {gameState.isWin ? 'PLAY AGAIN' : 'RETRY QUEST'}
-              </button>
-              <button
-                onClick={() => setView('start')}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-xs transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1"
-              >
-                RETURN TO MENU
-              </button>
+              <button onClick={() => initGame(gameState.level)} className="bg-white text-black px-8 py-4 text-xs transition-all border-b-4 border-gray-400 active:border-b-0 active:translate-y-1">{gameState.isWin ? 'PLAY AGAIN' : 'RETRY QUEST'}</button>
+              <button onClick={() => setView('start')} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-xs transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">RETURN TO MENU</button>
             </div>
           </div>
         )}

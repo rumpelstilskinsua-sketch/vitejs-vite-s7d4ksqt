@@ -41,6 +41,9 @@ export interface Ghost {
   isSmallest?: boolean;
   isLargest?: boolean;
   fireCooldown?: number;
+  health?: number;
+  maxHealth?: number;
+  isDead?: boolean;
 }
 
 export enum PixelType {
@@ -76,4 +79,14 @@ export interface GameState {
   isPaused: boolean;
   speedMultiplier: number;
   view: GameView;
+}
+
+export interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  color: string;
+  size: number;
 }
