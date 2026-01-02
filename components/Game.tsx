@@ -548,20 +548,18 @@ const Game: React.FC = () => {
 
     const remaining = grid.flat().some(p => p !== PixelType.EMPTY);
     if (!remaining) {
-      if (gameState.level < 4) {
-        setGameState(prev => ({ ...prev, isLevelCleared: true, started: false }));
-        if (deviceType === 'desktop') {
-          playSound('win');
-        } else {
-          if ('vibrate' in navigator) navigator.vibrate(200);
-        }
-      } else {
+      const isFinalLevel = gameState.level === 4;
+      if (isFinalLevel) {
         setGameState(prev => ({ ...prev, isWin: true, started: false }));
-        if (deviceType === 'desktop') {
-          playSound('win');
-        } else {
-          if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 300]);
-        }
+      } else {
+        setGameState(prev => ({ ...prev, isLevelCleared: true, started: false }));
+      }
+
+      // Feedback háptico (vibración) para CUALQUIER nivel en dispositivos táctiles
+      if (deviceType !== 'desktop' && 'vibrate' in navigator) {
+        navigator.vibrate(200);
+      } else {
+        playSound('win');
       }
     }
   }, [gameState.isPaused, gameState.started, gameState.view, gameState.speedMultiplier, gameState.level, gameState.isWin, gameState.isGameOver, gameState.isLevelCleared, getDynamicPixelSize, playSound, dimensions.width, dimensions.height, deviceType]);
@@ -623,22 +621,25 @@ const Game: React.FC = () => {
 
       if (ghost.health !== undefined && ghost.maxHealth !== undefined) {
         const barW = ghost.width;
-        const barH = 8;
+        const barH = 10;
         const barX = ghost.x;
-        const barY = ghost.y - 18;
+        const barY = ghost.y - 20;
         
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        // Fondo de la barra
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(barX, barY, barW, barH);
         
+        // Vida actual (Rojo Neón Brillante)
         const currentW = (ghost.health / ghost.maxHealth) * barW;
-        ctx.fillStyle = '#FF3131'; // Barra de salud Roja (Neon Red)
+        ctx.fillStyle = '#FF3131'; 
         ctx.fillRect(barX, barY, currentW, barH);
         
+        // Contorno Azul Brillante con resplandor
         ctx.save();
-        ctx.strokeStyle = '#00F3FF'; // Contorno Azul Brillante (Neon Blue)
-        ctx.shadowBlur = 10;
+        ctx.strokeStyle = '#00F3FF'; 
+        ctx.shadowBlur = 12;
         ctx.shadowColor = '#00F3FF';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.strokeRect(barX, barY, barW, barH);
         ctx.restore();
       }
