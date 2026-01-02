@@ -65,6 +65,13 @@ export enum PixelType {
   // Ghost colors
   GHOST_BODY = 13,
   GHOST_EYE = 14,
+  // Toad colors
+  TOAD_BODY = 15,
+  TOAD_EYE = 16,
+  TOAD_BELLY = 17,
+  // Bat colors
+  BAT_BODY = 18,
+  BAT_WING = 19,
 }
 
 export type GameView = 'start' | 'levelSelect' | 'playing';

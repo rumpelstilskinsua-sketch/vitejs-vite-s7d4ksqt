@@ -9,6 +9,7 @@ import {
   WIZARD_DATA, 
   SPIDER_64_DATA,
   GHOST_DATA,
+  BAT_DATA,
   FIRE_DATA,
   FIRE_SPEED,
   COLORS,
@@ -202,6 +203,66 @@ const Game: React.FC = () => {
     }
   };
 
+  const drawDynamicBackground = (ctx: CanvasRenderingContext2D, w: number, h: number, level: number) => {
+    let bgColor = '#110000';
+    let gradientStart = 'rgba(17, 0, 0, 0)';
+    let gradientMid = 'rgba(120, 20, 0, 0.2)';
+    let gradientEnd = 'rgba(255, 69, 0, 0.4)';
+    let particleColor1 = COLORS.FIRE_ORANGE;
+    let particleColor2 = COLORS.FIRE_YELLOW;
+
+    if (level === 2) {
+      bgColor = '#000011';
+      gradientMid = 'rgba(0, 20, 120, 0.2)';
+      gradientEnd = 'rgba(0, 243, 255, 0.4)';
+      particleColor1 = '#00F3FF';
+      particleColor2 = '#0077FF';
+    } else if (level === 3) {
+      bgColor = '#001100';
+      gradientMid = 'rgba(20, 120, 0, 0.2)';
+      gradientEnd = 'rgba(57, 255, 20, 0.4)';
+      particleColor1 = '#39FF14';
+      particleColor2 = '#064E3B';
+    } else if (level === 4) {
+      bgColor = '#110011'; // Deep neon purple tint
+      gradientMid = 'rgba(255, 0, 255, 0.2)'; // Neon Pink
+      gradientEnd = 'rgba(188, 19, 254, 0.4)'; // Neon Purple
+      particleColor1 = '#FF007F'; // Neon Pink
+      particleColor2 = '#BC13FE'; // Neon Purple
+    } else if (level === 5) {
+      bgColor = COLORS.BG_LEVEL5;
+      gradientMid = 'rgba(120, 0, 120, 0.2)';
+      gradientEnd = 'rgba(255, 100, 255, 0.4)';
+      particleColor1 = COLORS.BAT_PINK;
+      particleColor2 = '#000000';
+    }
+
+    // Fondo base sólido
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, w, h);
+
+    // Resplandor cálido en la base
+    const gradient = ctx.createLinearGradient(0, h - 150, 0, h);
+    gradient.addColorStop(0, gradientStart);
+    gradient.addColorStop(0.5, gradientMid);
+    gradient.addColorStop(1, gradientEnd);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, h - 150, w, 150);
+
+    // Generar ascuas ascendentes lento
+    if (frameCounterRef.current % 15 === 0) {
+      particlesRef.current.push({
+        x: Math.random() * w,
+        y: h + 10,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: -Math.random() * 0.6 - 0.4, 
+        life: 1.0,
+        color: Math.random() > 0.3 ? particleColor1 : particleColor2,
+        size: Math.random() * 3 + 2
+      });
+    }
+  };
+
   const initGame = useCallback((lvl: number = 1) => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -240,11 +301,14 @@ const Game: React.FC = () => {
     ];
 
     ghostsRef.current = spawnAreas.map((area, index) => {
-      const baseScale = PIXEL_SIZE * 0.6;
-      const scaleMultiplier = 0.6 + (index * 0.2);
+      const isLevel5 = lvl === 5;
+      const baseScale = PIXEL_SIZE * 0.6; // Smallest ghost size
+      const scaleMultiplier = isLevel5 ? 1.0 : (0.6 + (index * 0.2));
       const gPixelSize = baseScale * scaleMultiplier;
-      const gw = GHOST_DATA[0].length * gPixelSize;
-      const gh = GHOST_DATA.length * gPixelSize;
+      
+      const activeSpriteData = isLevel5 ? BAT_DATA : GHOST_DATA;
+      const gw = activeSpriteData[0].length * gPixelSize;
+      const gh = activeSpriteData.length * gPixelSize;
       
       const ghost: Ghost = {
         id: `ghost-${index}`,
@@ -256,12 +320,14 @@ const Game: React.FC = () => {
         width: gw,
         height: gh,
         pixelSize: gPixelSize,
-        isSmallest: index === 0,
-        isLargest: index === 5,
+        // In Level 5, only the first one (index 0) glows neon and spawns balls
+        isSmallest: index === 0, 
+        isLargest: isLevel5 ? false : (index === 5),
         fireCooldown: lvl >= 2 ? 180 : 0 
       };
 
-      if (lvl === 4 && index === 3) {
+      // Elite mob logic for Level 4 and Level 5
+      if ((lvl === 4 || lvl === 5) && index === 3) {
         ghost.health = 30;
         ghost.maxHealth = 30;
       }
@@ -337,7 +403,7 @@ const Game: React.FC = () => {
 
     particlesRef.current = particlesRef.current.filter(p => {
       p.x += p.vx; p.y += p.vy;
-      p.life -= 0.02;
+      p.life -= 0.008;
       return p.life > 0;
     });
 
@@ -526,7 +592,8 @@ const Game: React.FC = () => {
       const isFiringGhost = 
         (gameState.level === 2 && ghost.isLargest) || 
         (gameState.level === 3 && (ghost.isLargest || index === 4)) ||
-        (gameState.level === 4 && (ghost.isLargest || ghost.id === 'ghost-4' || ghost.id === 'ghost-3'));
+        (gameState.level === 4 && (ghost.isLargest || ghost.id === 'ghost-4' || ghost.id === 'ghost-3')) ||
+        (gameState.level === 5 && (ghost.id === 'ghost-4' || ghost.id === 'ghost-3'));
 
       if (isFiringGhost) {
         if ((ghost.fireCooldown || 0) <= 0 && ballsRef.current.length >= 2) {
@@ -548,14 +615,13 @@ const Game: React.FC = () => {
 
     const remaining = grid.flat().some(p => p !== PixelType.EMPTY);
     if (!remaining) {
-      const isFinalLevel = gameState.level === 4;
+      const isFinalLevel = gameState.level === 5;
       if (isFinalLevel) {
         setGameState(prev => ({ ...prev, isWin: true, started: false }));
       } else {
         setGameState(prev => ({ ...prev, isLevelCleared: true, started: false }));
       }
 
-      // Feedback háptico (vibración) para CUALQUIER nivel en dispositivos táctiles
       if (deviceType !== 'desktop' && 'vibrate' in navigator) {
         navigator.vibrate(200);
       } else {
@@ -570,8 +636,13 @@ const Game: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.fillStyle = COLORS.BG;
-    ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+    // Background logic - now includes all levels for dynamic backgrounds
+    if (gameState.view === 'playing' && [1, 2, 3, 4, 5].includes(gameState.level)) {
+      drawDynamicBackground(ctx, dimensions.width, dimensions.height, gameState.level);
+    } else {
+      ctx.fillStyle = COLORS.BG;
+      ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+    }
 
     if (gameState.view !== 'playing' && !gameState.isGameOver && !gameState.isWin && !gameState.isLevelCleared) return;
 
@@ -582,7 +653,8 @@ const Game: React.FC = () => {
     });
     ctx.globalAlpha = 1.0;
 
-    const neonIndex = Math.floor(frameCounterRef.current / 8) % NEON_COLORS.length;
+    // Color indices for flickering/neon - Speed up by 10% (32 -> 29 frames per transition)
+    const neonIndex = Math.floor(frameCounterRef.current / 29) % NEON_COLORS.length;
     const neonColor = NEON_COLORS[neonIndex];
 
     projectilesRef.current.forEach(p => {
@@ -601,19 +673,46 @@ const Game: React.FC = () => {
     });
 
     ghostsRef.current.forEach(ghost => {
-      const gGrid = GHOST_DATA;
+      const isLevel5 = gameState.level === 5;
+      const activeGrid = isLevel5 ? BAT_DATA : GHOST_DATA;
       const gPixelSize = ghost.pixelSize;
+      
       ctx.save();
-      ctx.shadowBlur = (ghost.isHit || ghost.isSmallest || ghost.isLargest) ? 20 : 10;
-      ctx.shadowColor = ghost.isSmallest ? neonColor : (ghost.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
-      for (let y = 0; y < gGrid.length; y++) {
-        for (let x = 0; x < gGrid[y].length; x++) {
-          const pixel = gGrid[y][x];
+      ctx.shadowBlur = (ghost.isHit || ghost.isSmallest) ? 20 : 10;
+      
+      // Shadow coloring
+      if (isLevel5) {
+        if (ghost.isSmallest) ctx.shadowColor = neonColor;
+        else ctx.shadowColor = ghost.isHit ? COLORS.BAT_PINK : COLORS.BAT_BLUE;
+      } else {
+        ctx.shadowColor = ghost.isSmallest ? neonColor : (ghost.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
+      }
+
+      for (let y = 0; y < activeGrid.length; y++) {
+        for (let x = 0; x < activeGrid[y].length; x++) {
+          const pixel = activeGrid[y][x];
           if (pixel === PixelType.EMPTY) continue;
-          if (pixel === PixelType.GHOST_BODY) {
-            ctx.fillStyle = ghost.isSmallest ? neonColor : (ghost.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
+          
+          if (isLevel5) {
+            // Bat logic
+            if (pixel === PixelType.GHOST_EYE) {
+                ctx.fillStyle = COLORS.GHOST_EYE;
+            } else {
+                // Body or Wing
+                if (ghost.isSmallest) {
+                    ctx.fillStyle = pixel === 18 ? neonColor : COLORS.BAT_BLACK;
+                } else {
+                    const mainColor = ghost.isHit ? COLORS.BAT_PINK : COLORS.BAT_BLUE;
+                    ctx.fillStyle = pixel === 18 ? mainColor : COLORS.BAT_BLACK;
+                }
+            }
           } else {
-            ctx.fillStyle = COLORS.GHOST_EYE;
+            // Ghost logic
+            if (pixel === PixelType.GHOST_BODY) {
+                ctx.fillStyle = ghost.isSmallest ? neonColor : (ghost.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
+            } else {
+                ctx.fillStyle = COLORS.GHOST_EYE;
+            }
           }
           ctx.fillRect(ghost.x + x * gPixelSize, ghost.y + y * gPixelSize, gPixelSize, gPixelSize);
         }
@@ -624,26 +723,16 @@ const Game: React.FC = () => {
         const barH = 10;
         const barX = ghost.x;
         const barY = ghost.y - 20;
-        
-        // Fondo de la barra
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(barX, barY, barW, barH);
-        
-        // Vida actual (Rojo Neón Brillante)
         const currentW = (ghost.health / ghost.maxHealth) * barW;
-        ctx.fillStyle = '#FF3131'; 
+        ctx.fillStyle = isLevel5 ? COLORS.BAT_PINK : '#FF3131'; 
         ctx.fillRect(barX, barY, currentW, barH);
-        
-        // Contorno Azul Brillante con resplandor
         ctx.save();
-        ctx.strokeStyle = '#00F3FF'; 
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = '#00F3FF';
-        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#FFFFFF'; 
         ctx.strokeRect(barX, barY, barW, barH);
         ctx.restore();
       }
-
       ctx.restore();
     });
 
@@ -798,25 +887,30 @@ const Game: React.FC = () => {
         {gameState.view === 'levelSelect' && (
           <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
             <h2 className="text-lg md:text-2xl mb-12 text-yellow-400 uppercase tracking-widest">SELECT LEVEL</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-5xl px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 w-full max-w-6xl px-4">
               <button onClick={() => initGame(1)} className="group flex flex-col items-center p-6 bg-blue-900/30 border-2 border-blue-600 hover:bg-blue-600/20 transition-all rounded-lg">
                 <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 1</span>
-                <span className="text-[8px] text-blue-300">NO FIRE</span>
+                <span className="text-[8px] text-blue-300">LAVA QUEST</span>
               </button>
 
               <button onClick={() => initGame(2)} className="group flex flex-col items-center p-6 bg-red-900/30 border-2 border-red-600 hover:bg-red-600/20 transition-all rounded-lg">
                 <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 2</span>
-                <span className="text-[8px] text-red-300">1 FIRE GHOST</span>
+                <span className="text-[8px] text-red-300">COLD ENERGY</span>
               </button>
 
               <button onClick={() => initGame(3)} className="group flex flex-col items-center p-6 bg-orange-900/30 border-2 border-orange-600 hover:bg-orange-600/20 transition-all rounded-lg">
                 <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 3</span>
-                <span className="text-[8px] text-orange-300">2 FIRE GHOSTS</span>
+                <span className="text-[8px] text-orange-300">TOXIC SLUDGE</span>
               </button>
 
               <button onClick={() => initGame(4)} className="group flex flex-col items-center p-6 bg-purple-900/30 border-2 border-purple-600 hover:bg-purple-600/20 transition-all rounded-lg">
                 <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 4</span>
                 <span className="text-[8px] text-purple-300">ELITE GHOST</span>
+              </button>
+
+              <button onClick={() => initGame(5)} className="group flex flex-col items-center p-6 bg-rose-900/30 border-2 border-rose-600 hover:bg-rose-600/20 transition-all rounded-lg">
+                <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 5</span>
+                <span className="text-[8px] text-rose-300">NIGHT BATS</span>
               </button>
             </div>
             <button
