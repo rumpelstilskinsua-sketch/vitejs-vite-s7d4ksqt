@@ -292,21 +292,21 @@ const Game: React.FC = () => {
     trailRef.current = {};
     particlesRef.current = [];
 
-    if (lvl === 5) {
-      charGridRef.current = SWAMP_RAT_DATA.map(row => [...row]);
-    } else {
-      charGridRef.current = (lvl === 1 ? WIZARD_DATA : SPIDER_64_DATA).map(row => [...row]);
-    }
+    // Nivel 5 ahora usa SPIDER_64_DATA igual que el nivel 4 por petición del usuario
+    charGridRef.current = (lvl === 1 ? WIZARD_DATA : SPIDER_64_DATA).map(row => [...row]);
     
+    // Jerarquía de posiciones para los fantasmas
     const spawnAreas = [
-      { x: 0.15, y: 0.25 }, { x: 0.35, y: 0.15 }, { x: 0.65, y: 0.15 },
-      { x: 0.85, y: 0.25 }, { x: 0.1, y: 0.5 }, { x: 0.9, y: 0.5 }
+      { x: 0.1, y: 0.2 }, { x: 0.3, y: 0.12 }, { x: 0.7, y: 0.12 },
+      { x: 0.9, y: 0.2 }, { x: 0.2, y: 0.5 }, { x: 0.8, y: 0.5 }
     ];
 
+    // Jerarquía: El index 0 es el más pequeño (neón), el index 5 es el más grande.
     ghostsRef.current = spawnAreas.map((area, index) => {
       const isSwampLevel = lvl === 5;
-      const baseScale = PIXEL_SIZE * 0.6;
-      const gPixelSize = baseScale;
+      const baseScale = PIXEL_SIZE * 0.5;
+      // Escala sucesiva: ghost 0 (scale 1.0), ghost 1 (scale 1.2), ..., ghost 5 (scale 2.0)
+      const gPixelSize = baseScale * (1 + index * 0.2);
       
       const isGhost = isSwampLevel ? (index >= 4) : true;
       const activeSpriteData = isSwampLevel ? (isGhost ? GHOST_DATA : FIREFLY_DATA) : GHOST_DATA;
@@ -324,15 +324,15 @@ const Game: React.FC = () => {
         width: gw,
         height: gh,
         pixelSize: gPixelSize,
-        isSmallest: index === 0, 
-        isLargest: isSwampLevel ? false : (index === 5),
+        isSmallest: index === 0, // El más pequeño cambia de color
+        isLargest: index === 5,
         fireCooldown: lvl >= 2 ? 180 : 0,
         isFirefly: isSwampLevel && !isGhost
       };
 
-      if ((lvl === 4 || lvl === 5) && index === 3) {
-        ghost.health = isSwampLevel ? 15 : 30;
-        ghost.maxHealth = isSwampLevel ? 15 : 30;
+      if ((lvl >= 4) && index === 5) {
+        ghost.health = isSwampLevel ? 20 : 35;
+        ghost.maxHealth = isSwampLevel ? 20 : 35;
       }
 
       return ghost;
@@ -712,6 +712,7 @@ const Game: React.FC = () => {
             }
           } else {
             if (pixel === PixelType.GHOST_BODY) {
+                // El cuerpo del más pequeño siempre usa el color neón actual
                 ctx.fillStyle = enemy.isSmallest ? neonColor : (enemy.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
             } else {
                 ctx.fillStyle = COLORS.GHOST_EYE;
