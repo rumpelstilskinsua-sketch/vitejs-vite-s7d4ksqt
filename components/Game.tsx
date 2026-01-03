@@ -9,7 +9,8 @@ import {
   WIZARD_DATA, 
   SPIDER_64_DATA,
   GHOST_DATA,
-  BAT_DATA,
+  SWAMP_RAT_DATA,
+  FIREFLY_DATA,
   FIRE_DATA,
   FIRE_SPEED,
   COLORS,
@@ -75,7 +76,7 @@ const Game: React.FC = () => {
   const frameCounterRef = useRef<number>(0);
 
   const getDynamicPixelSize = useCallback((gridWidth: number) => {
-    const maxCharacterWidth = dimensions.width * (dimensions.width < 640 ? 0.7 : 0.5);
+    const maxCharacterWidth = dimensions.width * (dimensions.width < 640 ? 0.85 : 0.65);
     const calculatedSize = maxCharacterWidth / gridWidth;
     return Math.min(PIXEL_SIZE, calculatedSize);
   }, [dimensions.width]);
@@ -224,24 +225,22 @@ const Game: React.FC = () => {
       particleColor1 = '#39FF14';
       particleColor2 = '#064E3B';
     } else if (level === 4) {
-      bgColor = '#110011'; // Deep neon purple tint
-      gradientMid = 'rgba(255, 0, 255, 0.2)'; // Neon Pink
-      gradientEnd = 'rgba(188, 19, 254, 0.4)'; // Neon Purple
-      particleColor1 = '#FF007F'; // Neon Pink
-      particleColor2 = '#BC13FE'; // Neon Purple
+      bgColor = '#110011';
+      gradientMid = 'rgba(255, 0, 255, 0.2)';
+      gradientEnd = 'rgba(188, 19, 254, 0.4)';
+      particleColor1 = '#FF007F';
+      particleColor2 = '#BC13FE';
     } else if (level === 5) {
-      bgColor = COLORS.BG_LEVEL5;
-      gradientMid = 'rgba(120, 0, 120, 0.2)';
-      gradientEnd = 'rgba(255, 100, 255, 0.4)';
-      particleColor1 = COLORS.BAT_PINK;
-      particleColor2 = '#000000';
+      bgColor = COLORS.SWAMP_BLACK;
+      gradientMid = 'rgba(0, 50, 0, 0.3)';
+      gradientEnd = 'rgba(57, 255, 20, 0.4)';
+      particleColor1 = COLORS.SWAMP_GREEN;
+      particleColor2 = '#002200';
     }
 
-    // Fondo base sólido
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, w, h);
 
-    // Resplandor cálido en la base
     const gradient = ctx.createLinearGradient(0, h - 150, 0, h);
     gradient.addColorStop(0, gradientStart);
     gradient.addColorStop(0.5, gradientMid);
@@ -249,7 +248,6 @@ const Game: React.FC = () => {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, h - 150, w, 150);
 
-    // Generar ascuas ascendentes lento
     if (frameCounterRef.current % 15 === 0) {
       particlesRef.current.push({
         x: Math.random() * w,
@@ -293,7 +291,12 @@ const Game: React.FC = () => {
     projectilesRef.current = [];
     trailRef.current = {};
     particlesRef.current = [];
-    charGridRef.current = (lvl === 1 ? WIZARD_DATA : SPIDER_64_DATA).map(row => [...row]);
+
+    if (lvl === 5) {
+      charGridRef.current = SWAMP_RAT_DATA.map(row => [...row]);
+    } else {
+      charGridRef.current = (lvl === 1 ? WIZARD_DATA : SPIDER_64_DATA).map(row => [...row]);
+    }
     
     const spawnAreas = [
       { x: 0.15, y: 0.25 }, { x: 0.35, y: 0.15 }, { x: 0.65, y: 0.15 },
@@ -301,17 +304,18 @@ const Game: React.FC = () => {
     ];
 
     ghostsRef.current = spawnAreas.map((area, index) => {
-      const isLevel5 = lvl === 5;
-      const baseScale = PIXEL_SIZE * 0.6; // Smallest ghost size
-      const scaleMultiplier = isLevel5 ? 1.0 : (0.6 + (index * 0.2));
-      const gPixelSize = baseScale * scaleMultiplier;
+      const isSwampLevel = lvl === 5;
+      const baseScale = PIXEL_SIZE * 0.6;
+      const gPixelSize = baseScale;
       
-      const activeSpriteData = isLevel5 ? BAT_DATA : GHOST_DATA;
+      const isGhost = isSwampLevel ? (index >= 4) : true;
+      const activeSpriteData = isSwampLevel ? (isGhost ? GHOST_DATA : FIREFLY_DATA) : GHOST_DATA;
+      
       const gw = activeSpriteData[0].length * gPixelSize;
       const gh = activeSpriteData.length * gPixelSize;
       
       const ghost: Ghost = {
-        id: `ghost-${index}`,
+        id: `enemy-${index}`,
         x: dimensions.width * area.x - gw / 2,
         y: dimensions.height * area.y - gh / 2,
         vx: (Math.random() - 0.5) * (1.5 + Math.random() * 2),
@@ -320,16 +324,15 @@ const Game: React.FC = () => {
         width: gw,
         height: gh,
         pixelSize: gPixelSize,
-        // In Level 5, only the first one (index 0) glows neon and spawns balls
         isSmallest: index === 0, 
-        isLargest: isLevel5 ? false : (index === 5),
-        fireCooldown: lvl >= 2 ? 180 : 0 
+        isLargest: isSwampLevel ? false : (index === 5),
+        fireCooldown: lvl >= 2 ? 180 : 0,
+        isFirefly: isSwampLevel && !isGhost
       };
 
-      // Elite mob logic for Level 4 and Level 5
       if ((lvl === 4 || lvl === 5) && index === 3) {
-        ghost.health = 30;
-        ghost.maxHealth = 30;
+        ghost.health = isSwampLevel ? 15 : 30;
+        ghost.maxHealth = isSwampLevel ? 15 : 30;
       }
 
       return ghost;
@@ -399,7 +402,7 @@ const Game: React.FC = () => {
     const grid = charGridRef.current;
     const ghosts = ghostsRef.current;
     const currentSpeed = BALL_SPEED * gameState.speedMultiplier;
-    const currentPixelSize = getDynamicPixelSize(grid[0].length);
+    const currentPixelSize = getDynamicPixelSize(grid[0]?.length || 1);
 
     particlesRef.current = particlesRef.current.filter(p => {
       p.x += p.vx; p.y += p.vy;
@@ -493,27 +496,27 @@ const Game: React.FC = () => {
         }
       }
 
-      let overlappedGhostId: string | undefined = undefined;
-      for (const ghost of ghosts) {
-        if (ghost.isDead) continue;
+      let overlappedEnemyId: string | undefined = undefined;
+      for (const enemy of ghosts) {
+        if (enemy.isDead) continue;
         if (
-          ball.x + ball.radius > ghost.x &&
-          ball.x - ball.radius < ghost.x + ghost.width &&
-          ball.y + ball.radius > ghost.y &&
-          ball.y - ball.radius < ghost.y + ghost.height
+          ball.x + ball.radius > enemy.x &&
+          ball.x - ball.radius < enemy.x + enemy.width &&
+          ball.y + ball.radius > enemy.y &&
+          ball.y - ball.radius < enemy.y + enemy.height
         ) {
-          overlappedGhostId = ghost.id;
+          overlappedEnemyId = enemy.id;
           
-          if (ghost.health !== undefined) {
-            ghost.health -= 1;
-            if (ghost.health <= 0) {
-              ghost.isDead = true;
-              createExplosion(ghost.x + ghost.width / 2, ghost.y + ghost.height / 2, COLORS.GHOST_BLUE);
+          if (enemy.health !== undefined) {
+            enemy.health -= 1;
+            if (enemy.health <= 0) {
+              enemy.isDead = true;
+              createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.isFirefly ? COLORS.SWAMP_GREEN : COLORS.GHOST_BLUE);
               setGameState(prev => ({ ...prev, score: prev.score + 1000 }));
             }
           }
 
-          if (ghost.isSmallest && ball.lastSpawnId !== ghost.id) {
+          if (enemy.isSmallest && ball.lastSpawnId !== enemy.id) {
             if (activeBalls.length + newSpawnedBalls.length < MAX_BALLS) {
               newSpawnedBalls.push({
                 id: Date.now() + Math.random(),
@@ -523,48 +526,50 @@ const Game: React.FC = () => {
                 dy: -Math.abs(currentSpeed),
                 radius: BALL_RADIUS,
                 color: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
-                lastSpawnId: ghost.id
+                lastSpawnId: enemy.id
               });
               playSound('spawn');
             }
           }
-          ball.lastSpawnId = ghost.id;
-          ghost.isHit = !ghost.isHit;
-          if (ghost.isHit) setGameState(prev => ({ ...prev, score: prev.score + 50 }));
+          ball.lastSpawnId = enemy.id;
+          enemy.isHit = !enemy.isHit;
+          if (enemy.isHit) setGameState(prev => ({ ...prev, score: prev.score + 50 }));
           playSound('ghost');
-          const ghostCenterX = ghost.x + ghost.width / 2;
-          const ghostCenterY = ghost.y + ghost.height / 2;
-          const dx = ball.x - ghostCenterX;
-          const dy = ball.y - ghostCenterY;
-          if (Math.abs(dx) / ghost.width > Math.abs(dy) / ghost.height) {
+          const centerX = enemy.x + enemy.width / 2;
+          const centerY = enemy.y + enemy.height / 2;
+          const dx = ball.x - centerX;
+          const dy = ball.y - centerY;
+          if (Math.abs(dx) / enemy.width > Math.abs(dy) / enemy.height) {
             ball.dx = Math.sign(dx) * currentSpeed;
-            ball.dy = ((ball.y - ghostCenterY) / (ghost.height / 2)) * currentSpeed * 0.8;
+            ball.dy = ((ball.y - centerY) / (enemy.height / 2)) * currentSpeed * 0.8;
           } else {
             ball.dy = Math.sign(dy) * currentSpeed;
-            ball.dx = ((ball.x - ghostCenterX) / (ghost.width / 2)) * currentSpeed * 1.2;
+            ball.dx = ((ball.x - centerX) / (enemy.width / 2)) * currentSpeed * 1.2;
           }
           ball.x += ball.dx; ball.y += ball.dy;
           break; 
         }
       }
-      if (!overlappedGhostId) ball.lastSpawnId = undefined;
+      if (!overlappedEnemyId) ball.lastSpawnId = undefined;
 
-      const charWidth = grid[0].length * currentPixelSize;
-      const charHeight = grid.length * currentPixelSize;
-      const charX = (dimensions.width - charWidth) / 2;
-      const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
-      const gx = Math.floor((ball.x - charX) / currentPixelSize);
-      const gy = Math.floor((ball.y - charY) / currentPixelSize);
+      const charWidth = (grid[0]?.length || 0) * currentPixelSize;
+      const charHeight = (grid?.length || 0) * currentPixelSize;
+      if (charWidth > 0) {
+        const charX = (dimensions.width - charWidth) / 2;
+        const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
+        const gx = Math.floor((ball.x - charX) / currentPixelSize);
+        const gy = Math.floor((ball.y - charY) / currentPixelSize);
 
-      if (gx >= 0 && gx < grid[0].length && gy >= 0 && gy < grid.length) {
-        if (grid[gy][gx] !== PixelType.EMPTY) {
-          grid[gy][gx] = PixelType.EMPTY;
-          const pixelCenterX = charX + gx * currentPixelSize + currentPixelSize / 2;
-          const pixelCenterY = charY + gy * currentPixelSize + currentPixelSize / 2;
-          if (Math.abs(ball.x - pixelCenterX) > Math.abs(ball.y - pixelCenterY)) ball.dx *= -1;
-          else ball.dy *= -1;
-          setGameState(prev => ({ ...prev, score: prev.score + 10 }));
-          playSound('hit');
+        if (gx >= 0 && gx < (grid[0]?.length || 0) && gy >= 0 && gy < grid.length) {
+          if (grid[gy][gx] !== PixelType.EMPTY) {
+            grid[gy][gx] = PixelType.EMPTY;
+            const pixelCenterX = charX + gx * currentPixelSize + currentPixelSize / 2;
+            const pixelCenterY = charY + gy * currentPixelSize + currentPixelSize / 2;
+            if (Math.abs(ball.x - pixelCenterX) > Math.abs(ball.y - pixelCenterY)) ball.dx *= -1;
+            else ball.dy *= -1;
+            setGameState(prev => ({ ...prev, score: prev.score + 10 }));
+            playSound('hit');
+          }
         }
       }
     }
@@ -578,43 +583,45 @@ const Game: React.FC = () => {
     }
 
     ghostsRef.current = ghosts.filter(g => !g.isDead);
-    ghostsRef.current.forEach((ghost, index) => {
-      ghost.x += ghost.vx; ghost.y += ghost.vy;
-      if (ghost.x <= 0) { ghost.vx = Math.abs(ghost.vx); ghost.x = 0; }
-      else if (ghost.x + ghost.width >= dimensions.width) { ghost.vx = -Math.abs(ghost.vx); ghost.x = dimensions.width - ghost.width; }
+    ghostsRef.current.forEach((enemy, index) => {
+      enemy.x += enemy.vx; enemy.y += enemy.vy;
+      if (enemy.x <= 0) { enemy.vx = Math.abs(enemy.vx); enemy.x = 0; }
+      else if (enemy.x + enemy.width >= dimensions.width) { enemy.vx = -Math.abs(enemy.vx); enemy.x = dimensions.width - enemy.width; }
       
-      if (ghost.y <= 0) { ghost.vy = Math.abs(ghost.vy); ghost.y = 0; }
-      else if (ghost.y + ghost.height >= dimensions.height * 0.7) { 
-        ghost.vy = -Math.abs(ghost.vy); 
-        ghost.y = dimensions.height * 0.7 - ghost.height; 
+      if (enemy.y <= 0) { enemy.vy = Math.abs(enemy.vy); enemy.y = 0; }
+      else if (enemy.y + enemy.height >= dimensions.height * 0.7) { 
+        enemy.vy = -Math.abs(enemy.vy); 
+        enemy.y = dimensions.height * 0.7 - enemy.height; 
       }
 
-      const isFiringGhost = 
-        (gameState.level === 2 && ghost.isLargest) || 
-        (gameState.level === 3 && (ghost.isLargest || index === 4)) ||
-        (gameState.level === 4 && (ghost.isLargest || ghost.id === 'ghost-4' || ghost.id === 'ghost-3')) ||
-        (gameState.level === 5 && (ghost.id === 'ghost-4' || ghost.id === 'ghost-3'));
+      const isFiringEnemy = 
+        (gameState.level === 2 && enemy.isLargest) || 
+        (gameState.level === 3 && (enemy.isLargest || index === 4)) ||
+        (gameState.level === 4 && (enemy.isLargest || enemy.id === 'enemy-4' || enemy.id === 'enemy-3')) ||
+        (gameState.level === 5 && (enemy.id === 'enemy-4' || enemy.id === 'enemy-3'));
 
-      if (isFiringGhost) {
-        if ((ghost.fireCooldown || 0) <= 0 && ballsRef.current.length >= 2) {
+      if (isFiringEnemy) {
+        if ((enemy.fireCooldown || 0) <= 0 && ballsRef.current.length >= 2) {
           projectilesRef.current.push({
             id: Date.now() + Math.random(),
-            x: ghost.x + ghost.width / 2 - 7,
-            y: ghost.y + ghost.height,
+            x: enemy.x + enemy.width / 2 - 7,
+            y: enemy.y + enemy.height,
             vx: 0,
             vy: FIRE_SPEED,
             width: 15,
             height: 20
           });
-          ghost.fireCooldown = 180; 
+          enemy.fireCooldown = 180; 
           playSound('spawn');
         }
       }
-      if ((ghost.fireCooldown || 0) > 0) ghost.fireCooldown! -= 1;
+      if ((enemy.fireCooldown || 0) > 0) enemy.fireCooldown! -= 1;
     });
 
-    const remaining = grid.flat().some(p => p !== PixelType.EMPTY);
-    if (!remaining) {
+    const pixelsRemaining = grid.flat().filter(p => p !== PixelType.EMPTY).length;
+    const isFigureCleared = pixelsRemaining === 0;
+    
+    if (isFigureCleared) {
       const isFinalLevel = gameState.level === 5;
       if (isFinalLevel) {
         setGameState(prev => ({ ...prev, isWin: true, started: false }));
@@ -636,7 +643,6 @@ const Game: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Background logic - now includes all levels for dynamic backgrounds
     if (gameState.view === 'playing' && [1, 2, 3, 4, 5].includes(gameState.level)) {
       drawDynamicBackground(ctx, dimensions.width, dimensions.height, gameState.level);
     } else {
@@ -653,7 +659,6 @@ const Game: React.FC = () => {
     });
     ctx.globalAlpha = 1.0;
 
-    // Color indices for flickering/neon - Speed up by 10% (32 -> 29 frames per transition)
     const neonIndex = Math.floor(frameCounterRef.current / 29) % NEON_COLORS.length;
     const neonColor = NEON_COLORS[neonIndex];
 
@@ -672,20 +677,21 @@ const Game: React.FC = () => {
       ctx.restore();
     });
 
-    ghostsRef.current.forEach(ghost => {
-      const isLevel5 = gameState.level === 5;
-      const activeGrid = isLevel5 ? BAT_DATA : GHOST_DATA;
-      const gPixelSize = ghost.pixelSize;
+    ghostsRef.current.forEach(enemy => {
+      const isSwampLevel = gameState.level === 5;
+      const activeGrid = enemy.isFirefly ? FIREFLY_DATA : GHOST_DATA;
+      const gPixelSize = enemy.pixelSize;
       
       ctx.save();
-      ctx.shadowBlur = (ghost.isHit || ghost.isSmallest) ? 20 : 10;
       
-      // Shadow coloring
-      if (isLevel5) {
-        if (ghost.isSmallest) ctx.shadowColor = neonColor;
-        else ctx.shadowColor = ghost.isHit ? COLORS.BAT_PINK : COLORS.BAT_BLUE;
+      if (enemy.isFirefly) {
+        const pulse = 0.6 + Math.sin(frameCounterRef.current * 0.1) * 0.4;
+        ctx.shadowBlur = (enemy.isHit || enemy.isSmallest) ? 25 : 15;
+        ctx.shadowColor = enemy.isSmallest ? neonColor : COLORS.SWAMP_GREEN;
+        ctx.globalAlpha = pulse;
       } else {
-        ctx.shadowColor = ghost.isSmallest ? neonColor : (ghost.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
+        ctx.shadowBlur = (enemy.isHit || enemy.isSmallest) ? 20 : 10;
+        ctx.shadowColor = enemy.isSmallest ? neonColor : (enemy.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
       }
 
       for (let y = 0; y < activeGrid.length; y++) {
@@ -693,40 +699,37 @@ const Game: React.FC = () => {
           const pixel = activeGrid[y][x];
           if (pixel === PixelType.EMPTY) continue;
           
-          if (isLevel5) {
-            // Bat logic
-            if (pixel === PixelType.GHOST_EYE) {
-                ctx.fillStyle = COLORS.GHOST_EYE;
+          let drawY = enemy.y + y * gPixelSize;
+          if (enemy.isFirefly) {
+            if (pixel === PixelType.FIREFLY_BODY) {
+              ctx.fillStyle = enemy.isSmallest ? neonColor : COLORS.FIREFLY_BODY;
+            } else if (pixel === PixelType.FIREFLY_WING) {
+              ctx.fillStyle = COLORS.FIREFLY_WING;
+              const wingOscillation = Math.sin(frameCounterRef.current * 0.08) * gPixelSize * 0.5;
+              drawY += wingOscillation;
             } else {
-                // Body or Wing
-                if (ghost.isSmallest) {
-                    ctx.fillStyle = pixel === 18 ? neonColor : COLORS.BAT_BLACK;
-                } else {
-                    const mainColor = ghost.isHit ? COLORS.BAT_PINK : COLORS.BAT_BLUE;
-                    ctx.fillStyle = pixel === 18 ? mainColor : COLORS.BAT_BLACK;
-                }
+              ctx.fillStyle = enemy.isSmallest ? neonColor : COLORS.FIREFLY_GLOW;
             }
           } else {
-            // Ghost logic
             if (pixel === PixelType.GHOST_BODY) {
-                ctx.fillStyle = ghost.isSmallest ? neonColor : (ghost.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
+                ctx.fillStyle = enemy.isSmallest ? neonColor : (enemy.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
             } else {
                 ctx.fillStyle = COLORS.GHOST_EYE;
             }
           }
-          ctx.fillRect(ghost.x + x * gPixelSize, ghost.y + y * gPixelSize, gPixelSize, gPixelSize);
+          ctx.fillRect(enemy.x + x * gPixelSize, drawY, gPixelSize, gPixelSize);
         }
       }
 
-      if (ghost.health !== undefined && ghost.maxHealth !== undefined) {
-        const barW = ghost.width;
-        const barH = 10;
-        const barX = ghost.x;
-        const barY = ghost.y - 20;
+      if (enemy.health !== undefined && enemy.maxHealth !== undefined) {
+        const barW = enemy.width;
+        const barH = 8;
+        const barX = enemy.x;
+        const barY = enemy.y - 15;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(barX, barY, barW, barH);
-        const currentW = (ghost.health / ghost.maxHealth) * barW;
-        ctx.fillStyle = isLevel5 ? COLORS.BAT_PINK : '#FF3131'; 
+        const currentW = (enemy.health / enemy.maxHealth) * barW;
+        ctx.fillStyle = isSwampLevel ? COLORS.SWAMP_GREEN : '#FF3131'; 
         ctx.fillRect(barX, barY, currentW, barH);
         ctx.save();
         ctx.strokeStyle = '#FFFFFF'; 
@@ -737,28 +740,37 @@ const Game: React.FC = () => {
     });
 
     const grid = charGridRef.current;
-    const currentPixelSize = getDynamicPixelSize(grid[0].length);
-    const charWidth = grid[0].length * currentPixelSize;
-    const charHeight = grid.length * currentPixelSize;
-    const charX = (dimensions.width - charWidth) / 2;
-    const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
+    if (grid[0]?.length > 1) {
+      const currentPixelSize = getDynamicPixelSize(grid[0].length);
+      const charWidth = grid[0].length * currentPixelSize;
+      const charHeight = grid.length * currentPixelSize;
+      const charX = (dimensions.width - charWidth) / 2;
+      const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
 
-    for (let y = 0; y < grid.length; y++) {
-      for (let x = 0; x < grid[y].length; x++) {
-        const pixel = grid[y][x];
-        if (pixel === PixelType.EMPTY) continue;
-        switch (pixel) {
-          case PixelType.WIZARD_CLOAK: ctx.fillStyle = COLORS.WIZARD_BLUE; break;
-          case PixelType.WIZARD_BEARD: ctx.fillStyle = COLORS.WIZARD_BEARD; break;
-          case PixelType.WIZARD_SKIN: ctx.fillStyle = COLORS.WIZARD_SKIN; break;
-          case PixelType.WIZARD_BROWN: ctx.fillStyle = COLORS.WIZARD_BROWN; break;
-          case PixelType.WIZARD_BLACK: ctx.fillStyle = COLORS.WIZARD_BLACK; break;
-          case PixelType.SPIDER_BODY_LIME: ctx.fillStyle = COLORS.SPIDER_BODY_LIME; break;
-          case PixelType.SPIDER_BODY_GREEN: ctx.fillStyle = COLORS.SPIDER_BODY_GREEN; break;
-          case PixelType.SPIDER_BODY_DARK: ctx.fillStyle = COLORS.SPIDER_BODY_DARK; break;
-          case PixelType.SPIDER_LEGS: ctx.fillStyle = COLORS.SPIDER_LEGS; break;
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          const pixel = grid[y][x];
+          if (pixel === PixelType.EMPTY) continue;
+          switch (pixel) {
+            case PixelType.WIZARD_CLOAK: ctx.fillStyle = COLORS.WIZARD_BLUE; break;
+            case PixelType.WIZARD_BEARD: ctx.fillStyle = COLORS.WIZARD_BEARD; break;
+            case PixelType.WIZARD_SKIN: ctx.fillStyle = COLORS.WIZARD_SKIN; break;
+            case PixelType.WIZARD_BROWN: ctx.fillStyle = COLORS.WIZARD_BROWN; break;
+            case PixelType.WIZARD_BLACK: ctx.fillStyle = COLORS.WIZARD_BLACK; break;
+            case PixelType.SPIDER_BODY_LIME: ctx.fillStyle = COLORS.SPIDER_BODY_LIME; break;
+            case PixelType.SPIDER_BODY_GREEN: ctx.fillStyle = COLORS.SPIDER_BODY_GREEN; break;
+            case PixelType.SPIDER_BODY_DARK: ctx.fillStyle = COLORS.SPIDER_BODY_DARK; break;
+            case PixelType.SPIDER_LEGS: ctx.fillStyle = COLORS.SPIDER_LEGS; break;
+            case PixelType.RAT_FUR_MID: ctx.fillStyle = COLORS.RAT_FUR_MID; break;
+            case PixelType.RAT_FUR_DARK: ctx.fillStyle = COLORS.RAT_FUR_DARK; break;
+            case PixelType.RAT_FUR_LIGHT: ctx.fillStyle = COLORS.RAT_FUR_LIGHT; break;
+            case PixelType.RAT_BELLY: ctx.fillStyle = COLORS.RAT_BELLY; break;
+            case PixelType.RAT_PINK: ctx.fillStyle = COLORS.RAT_PINK; break;
+            case PixelType.RAT_EYE: ctx.fillStyle = COLORS.RAT_EYE; break;
+            case PixelType.RAT_OUTLINE: ctx.fillStyle = COLORS.RAT_OUTLINE; break;
+          }
+          ctx.fillRect(charX + x * currentPixelSize, charY + y * currentPixelSize, currentPixelSize, currentPixelSize);
         }
-        ctx.fillRect(charX + x * currentPixelSize, charY + y * currentPixelSize, currentPixelSize, currentPixelSize);
       }
     }
 
@@ -888,30 +900,28 @@ const Game: React.FC = () => {
           <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
             <h2 className="text-lg md:text-2xl mb-12 text-yellow-400 uppercase tracking-widest">SELECT LEVEL</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 w-full max-w-6xl px-4">
-              <button onClick={() => initGame(1)} className="group flex flex-col items-center p-6 bg-blue-900/30 border-2 border-blue-600 hover:bg-blue-600/20 transition-all rounded-lg">
-                <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 1</span>
-                <span className="text-[8px] text-blue-300">LAVA QUEST</span>
-              </button>
-
-              <button onClick={() => initGame(2)} className="group flex flex-col items-center p-6 bg-red-900/30 border-2 border-red-600 hover:bg-red-600/20 transition-all rounded-lg">
-                <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 2</span>
-                <span className="text-[8px] text-red-300">COLD ENERGY</span>
-              </button>
-
-              <button onClick={() => initGame(3)} className="group flex flex-col items-center p-6 bg-orange-900/30 border-2 border-orange-600 hover:bg-orange-600/20 transition-all rounded-lg">
-                <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 3</span>
-                <span className="text-[8px] text-orange-300">TOXIC SLUDGE</span>
-              </button>
-
-              <button onClick={() => initGame(4)} className="group flex flex-col items-center p-6 bg-purple-900/30 border-2 border-purple-600 hover:bg-purple-600/20 transition-all rounded-lg">
-                <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 4</span>
-                <span className="text-[8px] text-purple-300">ELITE GHOST</span>
-              </button>
-
-              <button onClick={() => initGame(5)} className="group flex flex-col items-center p-6 bg-rose-900/30 border-2 border-rose-600 hover:bg-rose-600/20 transition-all rounded-lg">
-                <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL 5</span>
-                <span className="text-[8px] text-rose-300">NIGHT BATS</span>
-              </button>
+              {[1, 2, 3, 4, 5].map((l) => (
+                <button 
+                  key={l}
+                  onClick={() => initGame(l)} 
+                  className={`group flex flex-col items-center p-6 bg-opacity-30 border-2 transition-all rounded-lg ${
+                    l === 1 ? 'bg-blue-900 border-blue-600 hover:bg-blue-600/20' :
+                    l === 2 ? 'bg-red-900 border-red-600 hover:bg-red-600/20' :
+                    l === 3 ? 'bg-orange-900 border-orange-600 hover:bg-orange-600/20' :
+                    l === 4 ? 'bg-purple-900 border-purple-600 hover:bg-purple-600/20' :
+                    'bg-green-900 border-green-600 hover:bg-green-600/20'
+                  }`}
+                >
+                  <span className="text-[10px] md:text-xs mb-2 text-white">LEVEL {l}</span>
+                  <span className="text-[8px] uppercase">
+                    {l === 1 ? 'LAVA QUEST' :
+                     l === 2 ? 'COLD ENERGY' :
+                     l === 3 ? 'TOXIC SLUDGE' :
+                     l === 4 ? 'ELITE GHOST' :
+                     'SWAMP RAT'}
+                  </span>
+                </button>
+              ))}
             </div>
             <button
               onClick={() => setView('start')}

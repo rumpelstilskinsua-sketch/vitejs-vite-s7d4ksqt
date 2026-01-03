@@ -44,6 +44,7 @@ export interface Ghost {
   health?: number;
   maxHealth?: number;
   isDead?: boolean;
+  isFirefly?: boolean; // New property to distinguish level 5 fireflies
 }
 
 export enum PixelType {
@@ -72,6 +73,19 @@ export enum PixelType {
   // Bat colors
   BAT_BODY = 18,
   BAT_WING = 19,
+  // Firefly colors
+  FIREFLY_BODY = 20,
+  FIREFLY_GLOW = 21,
+  // Swamp Rat colors (Detailed Shading)
+  RAT_FUR_MID = 22,
+  RAT_FUR_DARK = 27,
+  RAT_FUR_LIGHT = 28,
+  RAT_BELLY = 23,
+  RAT_PINK = 29,
+  RAT_EYE = 30,
+  RAT_OUTLINE = 25,
+  // Firefly wings
+  FIREFLY_WING = 26,
 }
 
 export type GameView = 'start' | 'levelSelect' | 'playing';
