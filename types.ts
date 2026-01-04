@@ -1,3 +1,31 @@
+
+// Define GameView for the different screens of the game
+export type GameView = 'start' | 'playing' | 'levelSelect';
+
+// Define GameState to track the overall progress and settings
+export interface GameState {
+  score: number;
+  level: number;
+  isGameOver: boolean;
+  isWin: boolean;
+  isLevelCleared: boolean;
+  started: boolean;
+  isPaused: boolean;
+  speedMultiplier: number;
+  view: GameView;
+}
+
+// Define Particle for visual effects like explosions and background atmosphere
+export interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  color: string;
+  size: number;
+}
+
 export interface Ball {
   x: number;
   y: number;
@@ -44,7 +72,8 @@ export interface Ghost {
   health?: number;
   maxHealth?: number;
   isDead?: boolean;
-  isFirefly?: boolean; // New property to distinguish level 5 fireflies
+  isFirefly?: boolean;
+  isOgre?: boolean; // New property for level 5 ogres
 }
 
 export enum PixelType {
@@ -86,28 +115,10 @@ export enum PixelType {
   RAT_OUTLINE = 25,
   // Firefly wings
   FIREFLY_WING = 26,
-}
-
-export type GameView = 'start' | 'levelSelect' | 'playing';
-
-export interface GameState {
-  score: number;
-  level: number;
-  isGameOver: boolean;
-  isWin: boolean;
-  isLevelCleared: boolean;
-  started: boolean;
-  isPaused: boolean;
-  speedMultiplier: number;
-  view: GameView;
-}
-
-export interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  color: string;
-  size: number;
+  // Ogre colors
+  OGRE_BODY = 31,
+  OGRE_EYE = 32,
+  // Level 6 specific
+  METAL = 33,
+  LAB_BLUE = 34,
 }
