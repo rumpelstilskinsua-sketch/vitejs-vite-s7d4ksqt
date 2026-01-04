@@ -121,4 +121,11 @@ export enum PixelType {
   // Level 6 specific
   METAL = 33,
   LAB_BLUE = 34,
+  // Detailed Ogre Face (Shrek)
+  OGRE_OUTLINE = 35,
+  OGRE_FACE_MAIN = 36,
+  OGRE_FACE_DARK = 37,
+  OGRE_FACE_LIGHT = 38,
+  OGRE_TEETH = 39,
+  OGRE_SPOT = 40,
 }

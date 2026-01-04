@@ -53,6 +53,30 @@ export const WIZARD_DATA: number[][] = [
   [0,0,0,0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0],
 ];
 
+// Level 7: Detailed Ogre Face (Not used now, replaced by Labyrinth with bottle)
+export const OGRE_HEAD_DATA: number[][] = Array(40).fill(0).map((_, y) => 
+  Array(40).fill(0).map((_, x) => {
+    const dx = x - 20;
+    const dy = y - 20;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (Math.abs(dy-2) < 3 && Math.abs(dx)-16 > 0 && Math.abs(dx)-16 < 4) return PixelType.OGRE_FACE_DARK;
+    if (Math.abs(dy-2) < 5 && Math.abs(dx) > 17 && Math.abs(dx) < 21) return PixelType.OGRE_OUTLINE;
+    if (dist < 15) {
+        if (dist > 14) return PixelType.OGRE_OUTLINE;
+        if (Math.abs(dy+4) < 2 && Math.abs(dx)-6 < 2 && Math.abs(dx)-6 >= -2) return PixelType.OGRE_OUTLINE;
+        if (Math.abs(dx) < 3 && dy > -2 && dy < 3) return PixelType.OGRE_FACE_DARK;
+        if (dy > 6 && dy < 12 && Math.abs(dx) < 12) {
+            if (dy > 8 && dy < 10 && Math.abs(dx) < 8) return PixelType.OGRE_TEETH;
+            return PixelType.OGRE_OUTLINE;
+        }
+        if ((x + y) % 7 === 0 && dist < 12) return PixelType.OGRE_SPOT;
+        if (dy < -6 && Math.abs(dx) < 8) return PixelType.OGRE_FACE_LIGHT;
+        return PixelType.OGRE_FACE_MAIN;
+    }
+    return 0;
+  })
+);
+
 // Spider sprite for Level 2
 export const SPIDER_64_DATA: number[][] = Array(32).fill(0).map((_, y) => 
   Array(32).fill(0).map((_, x) => {
@@ -98,26 +122,48 @@ export const HAPPY_FACE_DATA: number[][] = [
 ];
 
 // Level 6: Metal Labyrinth (40x40)
-// Refuerzo: Borde de 3 píxeles de grosor para máxima impenetrabilidad.
 export const LABYRINTH_DATA: number[][] = Array(40).fill(0).map((_, y) => 
   Array(40).fill(0).map((_, x) => {
-    // Borde exterior indestructible (Metal) - 3 píxeles de grosor.
     const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
-    
-    // Entradas ensanchadas ligeramente (5 píxeles) para que la pelota pase sin problemas.
     const isTopEntrance = y <= 2 && x >= 17 && x <= 22;
     const isBottomEntrance = y >= 37 && x >= 17 && x <= 22;
-
     if (isBorder) {
-      if (isTopEntrance || isBottomEntrance) return 0; // Camino libre
-      return PixelType.METAL; // Barrera metálica
+      if (isTopEntrance || isBottomEntrance) return 0;
+      return PixelType.METAL;
+    }
+    if (x > 2 && x < 37 && y > 2 && y < 37) return PixelType.LAB_BLUE;
+    return 0;
+  })
+);
+
+// Level 7: Labyrinth with Beer Bottle Silhouette
+export const BOTTLE_LABYRINTH_DATA: number[][] = Array(40).fill(0).map((_, y) => 
+  Array(40).fill(0).map((_, x) => {
+    const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
+    const isTopEntrance = y <= 2 && x >= 17 && x <= 22;
+    const isBottomEntrance = y >= 37 && x >= 17 && x <= 22;
+    if (isBorder) {
+      if (isTopEntrance || isBottomEntrance) return 0;
+      return PixelType.METAL;
     }
     
-    // Relleno interior destructible.
-    if (x > 2 && x < 37 && y > 2 && y < 37) {
-      return PixelType.LAB_BLUE;
-    }
+    // Beer Bottle Silhouette logic
+    const inNeckArea = (y >= 6 && y <= 16) && (x >= 18 && x <= 22);
+    const inBodyArea = (y >= 16 && y <= 34) && (x >= 13 && x <= 27);
     
+    // Silhouette Outline
+    const isCapTop = (y === 6) && (x >= 18 && x <= 22);
+    const isNeckSides = (y >= 6 && y <= 15) && (x === 18 || x === 22);
+    const isShoulderLeft = (y >= 15 && y <= 19) && (x === 18 - (y - 15));
+    const isShoulderRight = (y >= 15 && y <= 19) && (x === 22 + (y - 15));
+    const isBodySides = (y >= 19 && y <= 34) && (x === 14 || x === 26);
+    const isBottomLine = (y === 34) && (x >= 14 && x <= 26);
+    
+    if (isCapTop || isNeckSides || isShoulderLeft || isShoulderRight || isBodySides || isBottomLine) {
+       return PixelType.WIZARD_BLACK;
+    }
+
+    if (x > 2 && x < 37 && y > 2 && y < 37) return PixelType.LAB_BLUE;
     return 0;
   })
 );
@@ -135,7 +181,7 @@ export const COLORS = {
   GHOST_EYE: '#FFFFFF',
   FIRE_ORANGE: '#FF4500', 
   FIRE_YELLOW: '#FFD700', 
-  BG: '#111827',
+  BG: '#051a05',
   SPIDER_BODY_LIME: '#39FF14',
   SPIDER_BODY_GREEN: '#16A34A',
   SPIDER_BODY_DARK: '#064E3B',
@@ -145,7 +191,7 @@ export const COLORS = {
   TOAD_YELLOW: '#FEF08A',
   // Level 5 specific
   SWAMP_GREEN: '#39FF14',
-  SWAMP_BLACK: '#000500',
+  SWAMP_BLACK: '#001a00',
   FIREFLY_BODY: '#FFFF00',
   FIREFLY_GLOW: '#00FF00',
   // Swamp Rat colors
@@ -165,6 +211,13 @@ export const COLORS = {
   // Level 6 Colors
   METAL_GREY: '#94A3B8',
   LAB_BLUE: '#0EA5E9',
+  // Detailed Ogre Head
+  OGRE_OUTLINE: '#141414',
+  OGRE_FACE_MAIN: '#6d8c32',
+  OGRE_FACE_DARK: '#475e2a',
+  OGRE_FACE_LIGHT: '#99b244',
+  OGRE_TEETH: '#f1f1f1',
+  OGRE_SPOT: '#c5d481',
 };
 
 export const NEON_COLORS = [

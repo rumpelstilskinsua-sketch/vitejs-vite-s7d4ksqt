@@ -15,7 +15,9 @@ import {
   FIRE_DATA,
   FIRE_SPEED,
   COLORS,
-  NEON_COLORS
+  NEON_COLORS,
+  OGRE_HEAD_DATA,
+  BOTTLE_LABYRINTH_DATA
 } from '../constants';
 import { Ball, Paddle, PixelType, GameState, GameView, Ghost, Projectile, Particle } from '../types';
 import KofiButton from './KofiButton';
@@ -207,37 +209,37 @@ const Game: React.FC = () => {
   };
 
   const drawDynamicBackground = (ctx: CanvasRenderingContext2D, w: number, h: number, level: number) => {
-    let bgColor = '#110000';
-    let gradientStart = 'rgba(17, 0, 0, 0)';
-    let gradientMid = 'rgba(120, 20, 0, 0.2)';
-    let gradientEnd = 'rgba(255, 69, 0, 0.4)';
-    let particleColor1 = COLORS.FIRE_ORANGE;
-    let particleColor2 = COLORS.FIRE_YELLOW;
+    let bgColor = '#051a05';
+    let gradientStart = 'rgba(5, 26, 5, 0)';
+    let gradientMid = 'rgba(57, 255, 20, 0.1)';
+    let gradientEnd = 'rgba(57, 255, 20, 0.3)';
+    let particleColor1 = COLORS.SWAMP_GREEN;
+    let particleColor2 = '#317700';
 
-    if (level === 2) {
+    if (level === 1) {
+      bgColor = '#110000';
+      gradientMid = 'rgba(120, 20, 0, 0.2)';
+      gradientEnd = 'rgba(255, 69, 0, 0.4)';
+      particleColor1 = COLORS.FIRE_ORANGE;
+      particleColor2 = COLORS.FIRE_YELLOW;
+    } else if (level === 2) {
       bgColor = '#000011';
       gradientMid = 'rgba(0, 20, 120, 0.2)';
       gradientEnd = 'rgba(0, 243, 255, 0.4)';
       particleColor1 = '#00F3FF';
       particleColor2 = '#0077FF';
-    } else if (level === 3) {
-      bgColor = '#001100';
-      gradientMid = 'rgba(20, 120, 0, 0.2)';
-      gradientEnd = 'rgba(57, 255, 20, 0.4)';
-      particleColor1 = '#39FF14';
-      particleColor2 = '#064E3B';
     } else if (level === 4) {
       bgColor = '#110011';
       gradientMid = 'rgba(255, 0, 255, 0.2)';
       gradientEnd = 'rgba(188, 19, 254, 0.4)';
       particleColor1 = '#FF007F';
       particleColor2 = '#BC13FE';
-    } else if (level === 5 || level === 6) {
-      bgColor = COLORS.SWAMP_BLACK;
-      gradientMid = 'rgba(0, 50, 0, 0.3)';
-      gradientEnd = 'rgba(57, 255, 20, 0.4)';
-      particleColor1 = COLORS.SWAMP_GREEN;
-      particleColor2 = '#002200';
+    } else if (level === 7) {
+      bgColor = '#001a00';
+      gradientMid = 'rgba(57, 255, 20, 0.2)';
+      gradientEnd = 'rgba(57, 255, 20, 0.5)';
+      particleColor1 = COLORS.OGRE_GREEN;
+      particleColor2 = COLORS.OGRE_SPOT;
     }
 
     ctx.fillStyle = bgColor;
@@ -294,12 +296,18 @@ const Game: React.FC = () => {
     trailRef.current = {};
     particlesRef.current = [];
 
+    // LEVEL LOGIC
     let levelData = WIZARD_DATA;
     if (lvl === 6) {
       levelData = LABYRINTH_DATA;
-    } else if (lvl >= 2) {
+    } else if (lvl === 7) {
+      levelData = BOTTLE_LABYRINTH_DATA;
+    } else if (lvl >= 2 && lvl <= 5) {
       levelData = SPIDER_64_DATA;
+    } else if (lvl === 1) {
+      levelData = WIZARD_DATA;
     }
+    
     charGridRef.current = levelData.map(row => [...row]);
     
     const spawnAreas = [
@@ -308,7 +316,7 @@ const Game: React.FC = () => {
     ];
 
     ghostsRef.current = spawnAreas.map((area, index) => {
-      const isOgreLevel = lvl === 5 || lvl === 6;
+      const isOgreLevel = lvl === 5 || lvl === 6 || lvl === 7;
       const baseScale = PIXEL_SIZE * 0.5;
       const gPixelSize = baseScale * (1 + index * 0.2);
       
@@ -334,8 +342,8 @@ const Game: React.FC = () => {
       };
 
       if ((lvl >= 4) && index === 5) {
-        enemy.health = isOgreLevel ? (lvl === 6 ? 40 : 20) : 35;
-        enemy.maxHealth = isOgreLevel ? (lvl === 6 ? 40 : 20) : 35;
+        enemy.health = isOgreLevel ? (lvl === 6 || lvl === 7 ? 40 : 20) : 35;
+        enemy.maxHealth = isOgreLevel ? (lvl === 6 || lvl === 7 ? 40 : 20) : 35;
       }
 
       return enemy;
@@ -535,7 +543,7 @@ const Game: React.FC = () => {
             }
           }
           ball.lastSpawnId = enemy.id;
-          enemy.isHit = !enemy.isHit; // Toggles color on each touch
+          enemy.isHit = !enemy.isHit; 
           if (enemy.isHit) setGameState(prev => ({ ...prev, score: prev.score + 50 }));
           playSound('ghost');
           const centerX = enemy.x + enemy.width / 2;
@@ -561,7 +569,6 @@ const Game: React.FC = () => {
         const charX = (dimensions.width - charWidth) / 2;
         const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
         
-        // Refuerzo: Comprobación perimetral (4 puntos + centro)
         const checkPoints = [
           { x: ball.x, y: ball.y },
           { x: ball.x - ball.radius, y: ball.y },
@@ -632,7 +639,7 @@ const Game: React.FC = () => {
         (gameState.level === 2 && enemy.isLargest) || 
         (gameState.level === 3 && (enemy.isLargest || index === 4)) ||
         (gameState.level === 4 && (enemy.isLargest || enemy.id === 'enemy-4' || enemy.id === 'enemy-3')) ||
-        ((gameState.level === 5 || gameState.level === 6) && (enemy.id === 'enemy-4' || enemy.id === 'enemy-3'));
+        ((gameState.level === 5 || gameState.level === 6 || gameState.level === 7) && (enemy.id === 'enemy-4' || enemy.id === 'enemy-3'));
 
       if (isFiringEnemy) {
         if ((enemy.fireCooldown || 0) <= 0 && ballsRef.current.length >= 2) {
@@ -656,7 +663,7 @@ const Game: React.FC = () => {
     const isFigureCleared = pixelsRemaining === 0;
     
     if (isFigureCleared) {
-      const isFinalLevel = gameState.level === 6;
+      const isFinalLevel = gameState.level === 7;
       if (isFinalLevel) {
         setGameState(prev => ({ ...prev, isWin: true, started: false }));
       } else {
@@ -677,7 +684,7 @@ const Game: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    if (gameState.view === 'playing' && [1, 2, 3, 4, 5, 6].includes(gameState.level)) {
+    if (gameState.view === 'playing' && [1, 2, 3, 4, 5, 6, 7].includes(gameState.level)) {
       drawDynamicBackground(ctx, dimensions.width, dimensions.height, gameState.level);
     } else {
       ctx.fillStyle = COLORS.BG;
@@ -803,6 +810,12 @@ const Game: React.FC = () => {
             case PixelType.RAT_OUTLINE: ctx.fillStyle = COLORS.RAT_OUTLINE; break;
             case PixelType.METAL: ctx.fillStyle = COLORS.METAL_GREY; break;
             case PixelType.LAB_BLUE: ctx.fillStyle = COLORS.LAB_BLUE; break;
+            case PixelType.OGRE_OUTLINE: ctx.fillStyle = COLORS.OGRE_OUTLINE; break;
+            case PixelType.OGRE_FACE_MAIN: ctx.fillStyle = COLORS.OGRE_FACE_MAIN; break;
+            case PixelType.OGRE_FACE_DARK: ctx.fillStyle = COLORS.OGRE_FACE_DARK; break;
+            case PixelType.OGRE_FACE_LIGHT: ctx.fillStyle = COLORS.OGRE_FACE_LIGHT; break;
+            case PixelType.OGRE_TEETH: ctx.fillStyle = COLORS.OGRE_TEETH; break;
+            case PixelType.OGRE_SPOT: ctx.fillStyle = COLORS.OGRE_SPOT; break;
           }
           ctx.fillRect(charX + x * currentPixelSize, charY + y * currentPixelSize, currentPixelSize, currentPixelSize);
         }
@@ -854,7 +867,7 @@ const Game: React.FC = () => {
       ctx.restore();
     });
 
-  }, [dimensions, gameState.level, gameState.view, gameState.isGameOver, gameState.isWin, gameState.isLevelCleared, getDynamicPixelSize]);
+  }, [dimensions, gameState.level, gameState.view, gameState.isGameOver, gameState.isWin, gameState.isLevelCleared, getDynamicPixelSize, frameCounterRef.current]);
 
   const loop = useCallback(() => {
     update();
@@ -868,24 +881,24 @@ const Game: React.FC = () => {
   }, [loop]);
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center bg-gray-950 text-white font-['Press_Start_2P'] select-none">
-      <div className="z-10 w-full p-4 flex flex-col items-center bg-gray-900/50 backdrop-blur-md border-b border-gray-800">
-        <h1 className="text-sm md:text-lg lg:text-2xl font-bold mb-2 tracking-widest text-blue-400 text-center">
-          ROMPEMAGOS
+    <div className="fixed inset-0 flex flex-col items-center bg-[#051a05] text-white font-['Press_Start_2P'] select-none">
+      <div className="z-10 w-full p-4 flex flex-col items-center bg-green-950/70 backdrop-blur-md border-b-4 border-green-900">
+        <h1 className="text-sm md:text-lg lg:text-2xl font-bold mb-2 tracking-widest text-lime-400 text-center drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+          EL OGRO BUCHON
         </h1>
         <div className="flex justify-between w-full max-w-4xl px-2 items-center">
           <div className="flex flex-col items-start uppercase text-[8px] md:text-[10px]">
-             <span className="text-gray-500 mb-1">Velocidad: {Math.round(gameState.speedMultiplier * 100)}%</span>
+             <span className="text-lime-600 mb-1">Velocidad: {Math.round(gameState.speedMultiplier * 100)}%</span>
              <input 
               type="range" min="0.1" max="1.5" step="0.05" value={gameState.speedMultiplier}
               onChange={(e) => setGameState(prev => ({ ...prev, speedMultiplier: parseFloat(e.target.value) }))}
-              className="w-20 md:w-32 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              className="w-20 md:w-32 h-1 bg-green-900 rounded-lg appearance-none cursor-pointer accent-lime-500"
              />
           </div>
           <div className="flex gap-2 md:gap-4 items-center">
             <button 
               onClick={togglePauseLocal} disabled={!gameState.started || gameState.isWin || gameState.isGameOver || gameState.isLevelCleared}
-              className={`p-2 rounded transition-all active:scale-95 ${(!gameState.started || gameState.isWin || gameState.isGameOver || gameState.isLevelCleared) ? 'opacity-30' : 'bg-blue-600 hover:bg-blue-500 border-b-2 border-blue-800'}`}
+              className={`p-2 rounded transition-all active:scale-95 ${(!gameState.started || gameState.isWin || gameState.isGameOver || gameState.isLevelCleared) ? 'opacity-30' : 'bg-green-700 hover:bg-green-600 border-b-4 border-green-900'}`}
             >
               {gameState.isPaused ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -893,7 +906,7 @@ const Game: React.FC = () => {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
               )}
             </button>
-            <p className="text-[10px] md:text-sm uppercase">Puntaje: <span className="text-yellow-400">{gameState.score}</span></p>
+            <p className="text-[10px] md:text-sm uppercase text-lime-300">Puntaje: <span className="text-yellow-400">{gameState.score}</span></p>
           </div>
         </div>
       </div>
@@ -912,22 +925,22 @@ const Game: React.FC = () => {
         />
 
         {gameState.view === 'start' && !gameState.isGameOver && !gameState.isWin && !gameState.isLevelCleared && (
-          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-8 text-center z-20">
-            <h2 className="text-lg md:text-2xl mb-8 text-blue-300 uppercase tracking-widest animate-pulse">ELIGE TU DESTINO</h2>
+          <div className="absolute inset-0 bg-green-950/80 flex flex-col items-center justify-center p-8 text-center z-20">
+            <h2 className="text-lg md:text-2xl mb-8 text-lime-300 uppercase tracking-widest animate-pulse drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">ENTRA AL PANTANO</h2>
             <div className="flex flex-col gap-4 w-full max-w-xs items-stretch">
               <button
                 onClick={() => initGame(1)}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1"
+                className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]"
               >
                 INICIAR MISIÓN
               </button>
               <button
                 onClick={() => setView('levelSelect')}
-                className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-purple-800 active:border-b-0 active:translate-y-1"
+                className="bg-lime-800 hover:bg-lime-700 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-lime-950 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]"
               >
                 SELECCIONAR NIVEL
               </button>
-              <div className="mt-4 flex justify-center">
+              <div className="mt-4 flex justify-center scale-110">
                 <KofiButton />
               </div>
             </div>
@@ -935,37 +948,38 @@ const Game: React.FC = () => {
         )}
 
         {gameState.view === 'levelSelect' && (
-          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
-            <h2 className="text-lg md:text-2xl mb-12 text-yellow-400 uppercase tracking-widest">SELECCIONAR NIVEL</h2>
+          <div className="absolute inset-0 bg-green-950/95 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
+            <h2 className="text-lg md:text-2xl mb-12 text-yellow-400 uppercase tracking-widest drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">SELECCIONAR NIVEL</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl px-4 pb-8">
-              {[1, 2, 3, 4, 5, 6].map((l) => (
+              {[1, 2, 3, 4, 5, 6, 7].map((l) => (
                 <button 
                   key={l}
                   onClick={() => initGame(l)} 
-                  className={`group flex flex-col items-center p-6 bg-opacity-30 border-2 transition-all rounded-lg ${
-                    l === 1 ? 'bg-blue-900 border-blue-600 hover:bg-blue-600/20' :
-                    l === 2 ? 'bg-red-900 border-red-600 hover:bg-red-600/20' :
-                    l === 3 ? 'bg-orange-900 border-orange-600 hover:bg-orange-600/20' :
-                    l === 4 ? 'bg-purple-900 border-purple-600 hover:bg-purple-600/20' :
-                    l === 5 ? 'bg-green-900 border-green-600 hover:bg-green-600/20' :
-                    'bg-slate-900 border-slate-500 hover:bg-slate-600/20'
+                  className={`group flex flex-col items-center p-6 bg-opacity-40 border-4 transition-all rounded-none shadow-[4px_4px_0px_rgba(0,0,0,0.5)] ${
+                    l === 1 || l === 7 ? 'bg-green-900 border-green-600 hover:bg-green-600/30' :
+                    l === 2 ? 'bg-red-900 border-red-600 hover:bg-red-600/30' :
+                    l === 3 ? 'bg-orange-900 border-orange-600 hover:bg-orange-600/30' :
+                    l === 4 ? 'bg-purple-900 border-purple-600 hover:bg-purple-600/30' :
+                    l === 5 ? 'bg-green-800 border-lime-600 hover:bg-lime-600/30' :
+                    'bg-slate-900 border-slate-500 hover:bg-slate-600/30'
                   }`}
                 >
                   <span className="text-[10px] md:text-xs mb-2 text-white">NIVEL {l}</span>
-                  <span className="text-[8px] uppercase">
+                  <span className="text-[8px] uppercase text-lime-100">
                     {l === 1 ? 'MISIÓN DE LAVA' :
                      l === 2 ? 'ENERGÍA FRÍA' :
                      l === 3 ? 'LODO TÓXICO' :
                      l === 4 ? 'FANTASMA ÉLITE' :
                      l === 5 ? 'SONRISA DEL PANTANO' :
-                     'EL LABERINTO FINAL'}
+                     l === 6 ? 'EL LABERINTO FINAL' :
+                     'EL RETORNO (LEVEL 7)'}
                   </span>
                 </button>
               ))}
             </div>
             <button
               onClick={() => setView('start')}
-              className="mt-6 text-gray-500 hover:text-white text-[8px] md:text-[10px] uppercase underline underline-offset-4"
+              className="mt-6 text-lime-600 hover:text-white text-[8px] md:text-[10px] uppercase underline underline-offset-4"
             >
               VOLVER AL INICIO
             </button>
@@ -973,19 +987,19 @@ const Game: React.FC = () => {
         )}
 
         {gameState.isPaused && gameState.view === 'playing' && (
-          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20">
-            <h2 className="text-2xl md:text-4xl mb-8 text-yellow-400 animate-pulse tracking-widest">PAUSADO</h2>
+          <div className="absolute inset-0 bg-green-950/70 flex flex-col items-center justify-center z-20">
+            <h2 className="text-2xl md:text-4xl mb-8 text-yellow-400 animate-pulse tracking-widest drop-shadow-[3px_3px_0px_rgba(0,0,0,1)]">PAUSA</h2>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4">
-              <button onClick={togglePauseLocal} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">REANUDAR</button>
-              <button onClick={() => setView('start')} className="bg-red-600 hover:bg-red-500 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-red-800 active:border-b-0 active:translate-y-1">SALIR AL MENÚ</button>
+              <button onClick={togglePauseLocal} className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1">REANUDAR</button>
+              <button onClick={() => setView('start')} className="bg-red-800 hover:bg-red-700 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-red-950 active:border-b-0 active:translate-y-1">SALIR</button>
             </div>
           </div>
         )}
 
         {gameState.isLevelCleared && (
           <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-30">
-            <h2 className="text-xl md:text-2xl mb-4 text-green-400 uppercase tracking-widest">¡NIVEL COMPLETADO!</h2>
-            <p className="text-[10px] md:text-xs mb-8 text-gray-300">EL DESAFÍO FINAL TE ESPERA...</p>
+            <h2 className="text-xl md:text-2xl mb-4 text-lime-400 uppercase tracking-widest">¡NIVEL SUPERADO!</h2>
+            <p className="text-[10px] md:text-xs mb-8 text-gray-300">ADÉNTRATE MÁS EN EL PANTANO...</p>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4">
               <button
                 onClick={() => initGame(gameState.level + 1)}
@@ -993,20 +1007,20 @@ const Game: React.FC = () => {
               >
                 IR AL NIVEL {gameState.level + 1}
               </button>
-              <button onClick={() => setView('levelSelect')} className="bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 text-[10px] transition-all border-b-4 border-gray-900 active:border-b-0 active:translate-y-1">VOLVER AL MENÚ</button>
+              <button onClick={() => setView('levelSelect')} className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 text-[10px] transition-all border-b-4 border-gray-950 active:border-b-0 active:translate-y-1">MENU DE NIVELES</button>
             </div>
           </div>
         )}
 
         {(gameState.isGameOver || gameState.isWin) && (
-          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-30">
-            <h2 className={`text-xl md:text-2xl mb-4 ${gameState.isWin ? 'text-green-400' : 'text-red-500'} uppercase tracking-widest text-center px-4`}>
-              {gameState.isWin ? '¡BENDICIÓN DE LAS CARAS FELICES! MISIÓN COMPLETADA' : 'MISIÓN FALLIDA'}
+          <div className="absolute inset-0 bg-green-950/90 flex flex-col items-center justify-center z-30">
+            <h2 className={`text-xl md:text-2xl mb-4 ${gameState.isWin ? 'text-lime-400' : 'text-red-500'} uppercase tracking-widest text-center px-4 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]`}>
+              {gameState.isWin ? '¡EL OGRO HA SIDO SACIADO! VICTORIA' : 'HAS SIDO EXPULSADO DEL PANTANO'}
             </h2>
-            <p className="text-xs md:text-sm mb-8">PUNTAJE FINAL: {gameState.score}</p>
+            <p className="text-xs md:text-sm mb-8 text-lime-200">PUNTAJE FINAL: {gameState.score}</p>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4 items-stretch">
-              <button onClick={() => initGame(gameState.level)} className="bg-white text-black px-8 py-4 text-xs transition-all border-b-4 border-gray-400 active:border-b-0 active:translate-y-1">{gameState.isWin ? 'JUGAR DE NUEVO' : 'REINTENTAR'}</button>
-              <button onClick={() => setView('start')} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-xs transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">VOLVER AL MENÚ</button>
+              <button onClick={() => initGame(gameState.level)} className="bg-white text-black px-8 py-4 text-xs transition-all border-b-4 border-gray-400 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">{gameState.isWin ? 'REPETIR GLORIA' : 'REINTENTAR'}</button>
+              <button onClick={() => setView('start')} className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-xs transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">PAGINA DE INICIO</button>
               <div className="mt-4 flex justify-center">
                 <KofiButton />
               </div>
@@ -1015,10 +1029,10 @@ const Game: React.FC = () => {
         )}
       </div>
 
-      <div className="hidden md:flex p-4 text-[8px] text-gray-600 uppercase gap-8 border-t border-gray-900 w-full justify-center">
+      <div className="hidden md:flex p-4 text-[8px] text-green-700 bg-green-950/40 uppercase gap-8 border-t-2 border-green-900 w-full justify-center">
         <span>FLECHAS: Moverse</span>
-        <span>P / ESC: Pausar</span>
-        {gameState.view === 'playing' && <span>NIVEL: {gameState.level}</span>}
+        <span>P / ESC: Pausa</span>
+        {gameState.view === 'playing' && <span className="text-lime-500">NIVEL: {gameState.level}</span>}
       </div>
     </div>
   );
