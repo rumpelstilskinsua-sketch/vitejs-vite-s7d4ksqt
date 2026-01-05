@@ -1,12 +1,11 @@
-import React, { useMemo } from 'react';
-import { KOFI_PHRASES } from '../constants';
 
-const KofiButton: React.FC = () => {
-  // Select a random phrase once on mount
-  const randomPhrase = useMemo(() => {
-    return KOFI_PHRASES[Math.floor(Math.random() * KOFI_PHRASES.length)];
-  }, []);
+import React from 'react';
 
+interface KofiButtonProps {
+  phrase: string;
+}
+
+const KofiButton: React.FC<KofiButtonProps> = ({ phrase }) => {
   return (
     <a
       href="https://ko-fi.com/ghosteater1"
@@ -22,7 +21,7 @@ const KofiButton: React.FC = () => {
       
       {/* Texto */}
       <span className="relative text-[10px] md:text-xs uppercase tracking-tight flex items-center gap-2 text-center">
-        {randomPhrase}
+        {phrase}
       </span>
     </a>
   );

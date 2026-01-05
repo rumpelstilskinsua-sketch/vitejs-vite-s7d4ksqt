@@ -17,7 +17,8 @@ import {
   COLORS,
   NEON_COLORS,
   BOTTLE_LABYRINTH_DATA,
-  SHREK_FACE_DATA
+  SHREK_FACE_DATA,
+  KOFI_PHRASES
 } from '../constants';
 import { Ball, Paddle, PixelType, GameState, GameView, Ghost, Projectile, Particle } from '../types';
 import KofiButton from './KofiButton';
@@ -29,8 +30,18 @@ interface TrailPoint {
   color: string;
 }
 
+interface Firefly {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  phase: number;
+}
+
 const MAX_BALLS = 16;
 const SPEED_STORAGE_KEY = 'wizard-breaker-speed-multiplier';
+const MAX_LEVEL_KEY = 'ogro-buchon-max-level-completed';
 
 const Game: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,20 +51,58 @@ const Game: React.FC = () => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   
+  const getRandomKofiPhrase = useCallback(() => {
+    return KOFI_PHRASES[Math.floor(Math.random() * KOFI_PHRASES.length)];
+  }, []);
+
   const [gameState, setGameState] = useState<GameState>(() => {
     const savedSpeed = localStorage.getItem(SPEED_STORAGE_KEY);
+    const savedMaxLvl = localStorage.getItem(MAX_LEVEL_KEY);
     return {
       score: 0,
       level: 1,
+      maxLevelCompleted: savedMaxLvl ? parseInt(savedMaxLvl) : 0,
       isGameOver: false,
       isWin: false,
       isLevelCleared: false,
       started: false,
       isPaused: false,
       speedMultiplier: savedSpeed ? parseFloat(savedSpeed) : 1.0,
-      view: 'start'
+      view: 'start',
+      kofiPhrase: KOFI_PHRASES[Math.floor(Math.random() * KOFI_PHRASES.length)]
     };
   });
+
+  const playClickSound = useCallback(() => {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      // Configuración BURBUJA (Bloop)
+      osc.type = 'sine'; 
+      osc.frequency.setValueAtTime(300, now); // Empieza medio
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.15); // Sube (glup)
+
+      // Envolvente de volumen suave
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } catch (err) {
+      console.warn("No se pudo generar el sonido de clic Bloop:", err);
+    }
+  }, []);
 
   const getPaddleY = useCallback((h: number, type: string) => {
     if (type === 'mobile') return h * 0.79;
@@ -76,6 +125,7 @@ const Game: React.FC = () => {
   const charGridRef = useRef<number[][]>(LEVEL_1_DATA.map(row => [...row]));
   const ghostsRef = useRef<Ghost[]>([]);
   const particlesRef = useRef<Particle[]>([]);
+  const firefliesRef = useRef<Firefly[]>([]);
   const keysRef = useRef<{ [key: string]: boolean }>({});
   const animationFrameRef = useRef<number | undefined>(undefined);
   const frameCounterRef = useRef<number>(0);
@@ -105,6 +155,24 @@ const Game: React.FC = () => {
     }
   }, [gameState.started, getPaddleY]);
 
+  // Swamp Fireflies Initialization
+  useEffect(() => {
+    if (dimensions.width > 0 && firefliesRef.current.length === 0) {
+      const flies: Firefly[] = [];
+      for (let i = 0; i < 40; i++) {
+        flies.push({
+          x: Math.random() * dimensions.width,
+          y: Math.random() * dimensions.height,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          size: Math.random() * 2 + 1,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+      firefliesRef.current = flies;
+    }
+  }, [dimensions]);
+
   useEffect(() => {
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
@@ -123,6 +191,11 @@ const Game: React.FC = () => {
   }, []);
 
   const playSound = useCallback((type: 'paddle' | 'wall' | 'hit' | 'win' | 'lose' | 'select' | 'ghost' | 'spawn') => {
+    if (type === 'select') {
+      playClickSound();
+      return;
+    }
+
     if (!audioCtxRef.current || gameState.isPaused) return;
     const ctx = audioCtxRef.current;
     if (ctx.state === 'suspended') ctx.resume();
@@ -134,14 +207,6 @@ const Game: React.FC = () => {
     const now = ctx.currentTime;
 
     switch (type) {
-      case 'select':
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.05);
-        gainNode.gain.setValueAtTime(0.05, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-        osc.start(); osc.stop(now + 0.05);
-        break;
       case 'paddle':
         osc.type = 'sine';
         osc.frequency.setValueAtTime(200, now);
@@ -193,7 +258,7 @@ const Game: React.FC = () => {
         osc.start(); osc.stop(now + 0.8);
         break;
     }
-  }, [gameState.isPaused]);
+  }, [gameState.isPaused, playClickSound]);
 
   const createExplosion = (x: number, y: number, color: string) => {
     for (let i = 0; i < 20; i++) {
@@ -271,6 +336,9 @@ const Game: React.FC = () => {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     
+    // Feedback sonoro al iniciar un nivel
+    playClickSound();
+
     const py = getPaddleY(dimensions.height, deviceType);
     paddleRef.current = {
       x: (dimensions.width - PADDLE_WIDTH) / 2,
@@ -306,7 +374,7 @@ const Game: React.FC = () => {
     } else if (lvl === 2) {
       levelData = LEVEL_2_DATA;
     } else if (lvl === 3) {
-      levelData = LEVEL_3_DATA;
+      levelData = LEVEL_2_DATA;
     } else if (lvl === 4) {
       levelData = LEVEL_1_DATA;
     } else if (lvl === 5) {
@@ -367,10 +435,12 @@ const Game: React.FC = () => {
       started: true,
       view: 'playing'
     }));
-  }, [dimensions, deviceType, getPaddleY, gameState.speedMultiplier]);
+  }, [dimensions, deviceType, getPaddleY, gameState.speedMultiplier, playClickSound]);
 
   const setView = useCallback((view: GameView) => {
-    playSound('select');
+    // Feedback sonoro al navegar por el menú
+    playClickSound();
+
     ballsRef.current = [];
     projectilesRef.current = [];
     ghostsRef.current = [];
@@ -382,9 +452,10 @@ const Game: React.FC = () => {
       isWin: false,
       isLevelCleared: false,
       started: false,
-      isPaused: false
+      isPaused: false,
+      kofiPhrase: (view === 'start' || view === 'levelSelect') ? getRandomKofiPhrase() : prev.kofiPhrase
     }));
-  }, [playSound]);
+  }, [playClickSound, getRandomKofiPhrase]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => { 
     keysRef.current[e.code] = true; 
@@ -413,6 +484,17 @@ const Game: React.FC = () => {
   }, [gameState.started, gameState.isPaused, gameState.view, dimensions.width]);
 
   const update = useCallback(() => {
+    // Menu Fireflies Movement
+    firefliesRef.current.forEach(fly => {
+      fly.x += fly.vx;
+      fly.y += fly.vy;
+      if (fly.x < 0) fly.x = dimensions.width;
+      if (fly.x > dimensions.width) fly.x = 0;
+      if (fly.y < 0) fly.y = dimensions.height;
+      if (fly.y > dimensions.height) fly.y = 0;
+      fly.phase += 0.05;
+    });
+
     if (gameState.isPaused || !gameState.started || gameState.view !== 'playing' || gameState.isWin || gameState.isGameOver || gameState.isLevelCleared) return;
 
     frameCounterRef.current++;
@@ -573,7 +655,6 @@ const Game: React.FC = () => {
       const charWidth = (grid[0]?.length || 0) * currentPixelSize;
       const charHeight = (grid?.length || 0) * currentPixelSize;
       if (charWidth > 0) {
-        // Horizontal floating logic for levels 1-4 (slower: factor 0.001)
         const time = Date.now() * 0.001;
         const floatX = (gameState.level >= 1 && gameState.level <= 4) ? Math.sin(time) * 15 : 0;
         const floatY = 0;
@@ -631,7 +712,12 @@ const Game: React.FC = () => {
     ballsRef.current = activeBalls.filter(b => !ballsToRemove.includes(b.id)).concat(newSpawnedBalls);
     
     if (ballsRef.current.length === 0) {
-      setGameState(prev => ({ ...prev, isGameOver: true, started: false }));
+      setGameState(prev => ({ 
+        ...prev, 
+        isGameOver: true, 
+        started: false,
+        kofiPhrase: getRandomKofiPhrase()
+      }));
       playSound('lose');
     }
 
@@ -676,10 +762,26 @@ const Game: React.FC = () => {
     
     if (isFigureCleared) {
       const isFinalLevel = gameState.level === 7;
+      const nextMaxLvl = Math.max(gameState.maxLevelCompleted, gameState.level);
+      
+      // Persist progress
+      localStorage.setItem(MAX_LEVEL_KEY, nextMaxLvl.toString());
+
       if (isFinalLevel) {
-        setGameState(prev => ({ ...prev, isWin: true, started: false }));
+        setGameState(prev => ({ 
+          ...prev, 
+          isWin: true, 
+          started: false,
+          maxLevelCompleted: nextMaxLvl,
+          kofiPhrase: getRandomKofiPhrase()
+        }));
       } else {
-        setGameState(prev => ({ ...prev, isLevelCleared: true, started: false }));
+        setGameState(prev => ({ 
+          ...prev, 
+          isLevelCleared: true, 
+          started: false,
+          maxLevelCompleted: nextMaxLvl
+        }));
       }
 
       if (deviceType !== 'desktop' && 'vibrate' in navigator) {
@@ -688,7 +790,80 @@ const Game: React.FC = () => {
         playSound('win');
       }
     }
-  }, [gameState.isPaused, gameState.started, gameState.view, gameState.speedMultiplier, gameState.level, gameState.isWin, gameState.isGameOver, gameState.isLevelCleared, getDynamicPixelSize, playSound, dimensions.width, dimensions.height, deviceType]);
+  }, [gameState.isPaused, gameState.started, gameState.view, gameState.speedMultiplier, gameState.level, gameState.maxLevelCompleted, gameState.isWin, gameState.isGameOver, gameState.isLevelCleared, getDynamicPixelSize, playSound, dimensions.width, dimensions.height, deviceType, getRandomKofiPhrase]);
+
+  const drawProgressPhrase = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    const phrase = "OGRO BUCHON";
+    const isMobile = deviceType === 'mobile';
+    
+    // Título grande e imponente
+    let titleFontSize = isMobile ? 24 : 48;
+    let letterSpacing = isMobile ? 6 : 12;
+    
+    // Cálculo dinámico para asegurar que el título quepa en pantalla
+    let titleWidth = (phrase.length * titleFontSize) + ((phrase.length - 1) * letterSpacing);
+    const maxTitleWidth = w * 0.92;
+    if (titleWidth > maxTitleWidth) {
+      const scale = maxTitleWidth / titleWidth;
+      titleFontSize = Math.floor(titleFontSize * scale);
+      letterSpacing = Math.floor(letterSpacing * scale);
+      titleWidth = (phrase.length * titleFontSize) + ((phrase.length - 1) * letterSpacing);
+    }
+
+    let startX = (w - titleWidth) / 2;
+    const startY = h * 0.18;
+
+    ctx.save();
+    ctx.font = `${titleFontSize}px 'Press Start 2P'`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    let nonSpaceCount = 0;
+    for (let i = 0; i < phrase.length; i++) {
+      const char = phrase[i];
+      if (char === ' ') {
+        startX += titleFontSize + letterSpacing;
+        continue;
+      }
+      
+      nonSpaceCount++;
+      const isUnlocked = nonSpaceCount <= gameState.maxLevelCompleted;
+      
+      if (isUnlocked) {
+        ctx.fillStyle = '#ccff00';
+        ctx.shadowBlur = isMobile ? 8 : 15;
+        ctx.shadowColor = '#ccff00';
+        ctx.globalAlpha = 1.0;
+      } else {
+        ctx.fillStyle = '#666666';
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 0.6;
+      }
+
+      ctx.fillText(char, startX, startY);
+      startX += titleFontSize + letterSpacing;
+    }
+
+    // Subtítulo con escalado dinámico/responsivo para que no se corte en móviles
+    ctx.restore();
+    ctx.save();
+    const subText = "COMPLETA LOS NIVELES PARA RECOLECTAR LAS LETRAS";
+    let subtitleFontSize = isMobile ? 10 : 14; // Tamaño sugerido por usuario
+    ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
+    let subWidth = ctx.measureText(subText).width;
+    
+    // Ajuste dinámico de fuente del subtítulo si aún es demasiado largo
+    const maxSubWidth = w * 0.95;
+    if (subWidth > maxSubWidth) {
+       subtitleFontSize = Math.floor(subtitleFontSize * (maxSubWidth / subWidth));
+       ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
+    }
+
+    ctx.fillStyle = '#AAAAAA';
+    ctx.textAlign = 'center';
+    ctx.fillText(subText, w / 2, startY + (isMobile ? 30 : 60));
+    ctx.restore();
+  }, [gameState.maxLevelCompleted, deviceType]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -701,6 +876,20 @@ const Game: React.FC = () => {
     } else {
       ctx.fillStyle = COLORS.BG;
       ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+
+      firefliesRef.current.forEach(fly => {
+        const flicker = (Math.sin(fly.phase) + 1) / 2;
+        ctx.save();
+        ctx.fillStyle = `rgba(204, 255, 0, ${flicker * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(fly.x, fly.y, fly.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      if (gameState.view === 'start') {
+        drawProgressPhrase(ctx, dimensions.width, dimensions.height);
+      }
     }
 
     if (gameState.view !== 'playing' && !gameState.isGameOver && !gameState.isWin && !gameState.isLevelCleared) return;
@@ -793,7 +982,6 @@ const Game: React.FC = () => {
 
     const grid = charGridRef.current;
     if (grid[0]?.length > 1) {
-      // Horizontal floating logic for levels 1-4 (slower: factor 0.001)
       const time = Date.now() * 0.001;
       const floatX = (gameState.level >= 1 && gameState.level <= 4) ? Math.sin(time) * 15 : 0;
       const floatY = 0;
@@ -884,7 +1072,7 @@ const Game: React.FC = () => {
       ctx.restore();
     });
 
-  }, [dimensions, gameState.level, gameState.view, gameState.isGameOver, gameState.isWin, gameState.isLevelCleared, getDynamicPixelSize, frameCounterRef.current]);
+  }, [dimensions, gameState.level, gameState.view, gameState.isGameOver, gameState.isWin, gameState.isLevelCleared, getDynamicPixelSize, frameCounterRef.current, playClickSound, drawProgressPhrase]);
 
   const loop = useCallback(() => {
     update();
@@ -942,30 +1130,32 @@ const Game: React.FC = () => {
         />
 
         {gameState.view === 'start' && !gameState.isGameOver && !gameState.isWin && !gameState.isLevelCleared && (
-          <div className="absolute inset-0 bg-green-950/80 flex flex-col items-center justify-center p-8 text-center z-20">
-            <h2 className="text-lg md:text-2xl mb-8 text-lime-300 uppercase tracking-widest animate-pulse drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">ENTRA AL PANTANO</h2>
-            <div className="flex flex-col gap-4 w-full max-w-xs items-stretch">
-              <button
-                onClick={() => initGame(1)}
-                className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]"
-              >
-                INICIAR MISIÓN
-              </button>
-              <button
-                onClick={() => setView('levelSelect')}
-                className="bg-lime-800 hover:bg-lime-700 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-lime-950 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]"
-              >
-                SELECCIONAR NIVEL
-              </button>
-              <div className="mt-4 flex justify-center scale-110">
-                <KofiButton />
+          <div className="absolute inset-0 bg-green-950/20 flex flex-col items-center justify-center p-8 text-center z-20">
+            <div className="mt-[22%] md:mt-[20%] flex flex-col items-center">
+              <h2 className="text-lg md:text-2xl mb-8 text-lime-300 uppercase tracking-widest animate-pulse drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">ENTRA AL PANTANO</h2>
+              <div className="flex flex-col gap-4 w-full max-w-xs items-stretch">
+                <button
+                  onClick={() => initGame(1)}
+                  className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]"
+                >
+                  INICIAR MISIÓN
+                </button>
+                <button
+                  onClick={() => setView('levelSelect')}
+                  className="bg-lime-800 hover:bg-lime-700 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-lime-950 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]"
+                >
+                  SELECCIONAR NIVEL
+                </button>
+                <div className="mt-4 flex justify-center scale-110">
+                  <KofiButton phrase={gameState.kofiPhrase} />
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {gameState.view === 'levelSelect' && (
-          <div className="absolute inset-0 bg-green-950/95 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
+          <div className="absolute inset-0 bg-green-950/40 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
             <h2 className="text-lg md:text-2xl mb-12 text-yellow-400 uppercase tracking-widest drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">SELECCIONAR NIVEL</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl px-4 pb-8">
               {[1, 2, 3, 4, 5, 6, 7].map((l) => (
@@ -1039,7 +1229,7 @@ const Game: React.FC = () => {
               <button onClick={() => initGame(gameState.level)} className="bg-white text-black px-8 py-4 text-xs transition-all border-b-4 border-gray-400 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">{gameState.isWin ? 'REPETIR GLORIA' : 'REINTENTAR'}</button>
               <button onClick={() => setView('start')} className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-xs transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">PAGINA DE INICIO</button>
               <div className="mt-4 flex justify-center">
-                <KofiButton />
+                <KofiButton phrase={gameState.kofiPhrase} />
               </div>
             </div>
           </div>

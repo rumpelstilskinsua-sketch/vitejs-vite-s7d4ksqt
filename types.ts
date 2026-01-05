@@ -6,6 +6,7 @@ export type GameView = 'start' | 'playing' | 'levelSelect';
 export interface GameState {
   score: number;
   level: number;
+  maxLevelCompleted: number; // New: tracking for the "OGRO BUCHON" letter collection
   isGameOver: boolean;
   isWin: boolean;
   isLevelCleared: boolean;
@@ -13,6 +14,7 @@ export interface GameState {
   isPaused: boolean;
   speedMultiplier: number;
   view: GameView;
+  kofiPhrase: string; // Dynamic phrase for the Ko-fi button
 }
 
 // Define Particle for visual effects like explosions and background atmosphere
