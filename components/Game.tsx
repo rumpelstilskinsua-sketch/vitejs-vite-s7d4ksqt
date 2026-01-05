@@ -1,5 +1,3 @@
-
-import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { 
   PADDLE_WIDTH, 
   PADDLE_HEIGHT, 
@@ -7,7 +5,9 @@ import {
   BALL_RADIUS, 
   BALL_SPEED, 
   PIXEL_SIZE, 
-  WIZARD_DATA, 
+  LEVEL_1_DATA, 
+  LEVEL_2_DATA,
+  LEVEL_3_DATA,
   SPIDER_64_DATA,
   LABYRINTH_DATA,
   GHOST_DATA,
@@ -16,11 +16,12 @@ import {
   FIRE_SPEED,
   COLORS,
   NEON_COLORS,
-  OGRE_HEAD_DATA,
-  BOTTLE_LABYRINTH_DATA
+  BOTTLE_LABYRINTH_DATA,
+  SHREK_FACE_DATA
 } from '../constants';
 import { Ball, Paddle, PixelType, GameState, GameView, Ghost, Projectile, Particle } from '../types';
 import KofiButton from './KofiButton';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 interface TrailPoint {
   x: number;
@@ -72,7 +73,7 @@ const Game: React.FC = () => {
   const ballsRef = useRef<Ball[]>([]);
   const projectilesRef = useRef<Projectile[]>([]);
   const trailRef = useRef<{ [key: number]: TrailPoint[] }>({});
-  const charGridRef = useRef<number[][]>(WIZARD_DATA.map(row => [...row]));
+  const charGridRef = useRef<number[][]>(LEVEL_1_DATA.map(row => [...row]));
   const ghostsRef = useRef<Ghost[]>([]);
   const particlesRef = useRef<Particle[]>([]);
   const keysRef = useRef<{ [key: string]: boolean }>({});
@@ -222,7 +223,7 @@ const Game: React.FC = () => {
       gradientEnd = 'rgba(255, 69, 0, 0.4)';
       particleColor1 = COLORS.FIRE_ORANGE;
       particleColor2 = COLORS.FIRE_YELLOW;
-    } else if (level === 2) {
+    } else if (level === 2 || level === 3) {
       bgColor = '#000011';
       gradientMid = 'rgba(0, 20, 120, 0.2)';
       gradientEnd = 'rgba(0, 243, 255, 0.4)';
@@ -297,15 +298,21 @@ const Game: React.FC = () => {
     particlesRef.current = [];
 
     // LEVEL LOGIC
-    let levelData = WIZARD_DATA;
+    let levelData = LEVEL_1_DATA;
     if (lvl === 6) {
       levelData = LABYRINTH_DATA;
     } else if (lvl === 7) {
-      levelData = BOTTLE_LABYRINTH_DATA;
-    } else if (lvl >= 2 && lvl <= 5) {
+      levelData = SHREK_FACE_DATA;
+    } else if (lvl === 2) {
+      levelData = LEVEL_2_DATA;
+    } else if (lvl === 3) {
+      levelData = LEVEL_3_DATA;
+    } else if (lvl === 4) {
+      levelData = LEVEL_1_DATA;
+    } else if (lvl === 5) {
       levelData = SPIDER_64_DATA;
     } else if (lvl === 1) {
-      levelData = WIZARD_DATA;
+      levelData = LEVEL_1_DATA;
     }
     
     charGridRef.current = levelData.map(row => [...row]);
@@ -566,8 +573,13 @@ const Game: React.FC = () => {
       const charWidth = (grid[0]?.length || 0) * currentPixelSize;
       const charHeight = (grid?.length || 0) * currentPixelSize;
       if (charWidth > 0) {
-        const charX = (dimensions.width - charWidth) / 2;
-        const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
+        // Horizontal floating logic for levels 1-4 (slower: factor 0.001)
+        const time = Date.now() * 0.001;
+        const floatX = (gameState.level >= 1 && gameState.level <= 4) ? Math.sin(time) * 15 : 0;
+        const floatY = 0;
+
+        const charX = (dimensions.width - charWidth) / 2 + floatX;
+        const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2)) + floatY;
         
         const checkPoints = [
           { x: ball.x, y: ball.y },
@@ -781,11 +793,16 @@ const Game: React.FC = () => {
 
     const grid = charGridRef.current;
     if (grid[0]?.length > 1) {
+      // Horizontal floating logic for levels 1-4 (slower: factor 0.001)
+      const time = Date.now() * 0.001;
+      const floatX = (gameState.level >= 1 && gameState.level <= 4) ? Math.sin(time) * 15 : 0;
+      const floatY = 0;
+
       const currentPixelSize = getDynamicPixelSize(grid[0].length);
       const charWidth = grid[0].length * currentPixelSize;
       const charHeight = grid.length * currentPixelSize;
-      const charX = (dimensions.width - charWidth) / 2;
-      const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
+      const charX = (dimensions.width - charWidth) / 2 + floatX;
+      const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2)) + floatY;
 
       for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
@@ -966,7 +983,7 @@ const Game: React.FC = () => {
                 >
                   <span className="text-[10px] md:text-xs mb-2 text-white">NIVEL {l}</span>
                   <span className="text-[8px] uppercase text-lime-100">
-                    {l === 1 ? 'MISIÓN DE LAVA' :
+                    {l === 1 ? 'EL BLOQUE DE LODO' :
                      l === 2 ? 'ENERGÍA FRÍA' :
                      l === 3 ? 'LODO TÓXICO' :
                      l === 4 ? 'FANTASMA ÉLITE' :
