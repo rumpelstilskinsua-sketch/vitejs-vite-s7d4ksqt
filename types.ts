@@ -6,7 +6,7 @@ export type GameView = 'start' | 'playing' | 'levelSelect';
 export interface GameState {
   score: number;
   level: number;
-  maxLevelCompleted: number; // New: tracking for the "OGRO BUCHON" letter collection
+  completedLevels: number[]; // Track specific levels completed for strict 1:1 letter unlocking
   isGameOver: boolean;
   isWin: boolean;
   isLevelCleared: boolean;

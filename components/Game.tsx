@@ -1,3 +1,4 @@
+
 import { 
   PADDLE_WIDTH, 
   PADDLE_HEIGHT, 
@@ -8,6 +9,8 @@ import {
   LEVEL_1_DATA, 
   LEVEL_2_DATA,
   LEVEL_3_DATA,
+  LEVEL_5_DATA,
+  LEVEL_6_DATA,
   SPIDER_64_DATA,
   LABYRINTH_DATA,
   GHOST_DATA,
@@ -41,7 +44,7 @@ interface Firefly {
 
 const MAX_BALLS = 16;
 const SPEED_STORAGE_KEY = 'wizard-breaker-speed-multiplier';
-const MAX_LEVEL_KEY = 'ogro-buchon-max-level-completed';
+const COMPLETED_LEVELS_KEY = 'ogro-buchon-completed-levels-list';
 
 const Game: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,11 +60,11 @@ const Game: React.FC = () => {
 
   const [gameState, setGameState] = useState<GameState>(() => {
     const savedSpeed = localStorage.getItem(SPEED_STORAGE_KEY);
-    const savedMaxLvl = localStorage.getItem(MAX_LEVEL_KEY);
+    const savedLevels = localStorage.getItem(COMPLETED_LEVELS_KEY);
     return {
       score: 0,
       level: 1,
-      maxLevelCompleted: savedMaxLvl ? parseInt(savedMaxLvl) : 0,
+      completedLevels: savedLevels ? JSON.parse(savedLevels) : [],
       isGameOver: false,
       isWin: false,
       isLevelCleared: false,
@@ -85,12 +88,10 @@ const Game: React.FC = () => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      // Configuración BURBUJA (Bloop)
       osc.type = 'sine'; 
-      osc.frequency.setValueAtTime(300, now); // Empieza medio
-      osc.frequency.exponentialRampToValueAtTime(600, now + 0.15); // Sube (glup)
+      osc.frequency.setValueAtTime(300, now); 
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.15); 
 
-      // Envolvente de volumen suave
       gain.gain.setValueAtTime(0.2, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
 
@@ -155,7 +156,6 @@ const Game: React.FC = () => {
     }
   }, [gameState.started, getPaddleY]);
 
-  // Swamp Fireflies Initialization
   useEffect(() => {
     if (dimensions.width > 0 && firefliesRef.current.length === 0) {
       const flies: Firefly[] = [];
@@ -282,25 +282,13 @@ const Game: React.FC = () => {
     let particleColor1 = COLORS.SWAMP_GREEN;
     let particleColor2 = '#317700';
 
-    if (level === 1) {
-      bgColor = '#110000';
-      gradientMid = 'rgba(120, 20, 0, 0.2)';
-      gradientEnd = 'rgba(255, 69, 0, 0.4)';
-      particleColor1 = COLORS.FIRE_ORANGE;
-      particleColor2 = COLORS.FIRE_YELLOW;
-    } else if (level === 2 || level === 3) {
-      bgColor = '#000011';
-      gradientMid = 'rgba(0, 20, 120, 0.2)';
-      gradientEnd = 'rgba(0, 243, 255, 0.4)';
-      particleColor1 = '#00F3FF';
-      particleColor2 = '#0077FF';
-    } else if (level === 4) {
-      bgColor = '#110011';
-      gradientMid = 'rgba(255, 0, 255, 0.2)';
-      gradientEnd = 'rgba(188, 19, 254, 0.4)';
-      particleColor1 = '#FF007F';
-      particleColor2 = '#BC13FE';
-    } else if (level === 7) {
+    if (level >= 1 && level <= 10) {
+      bgColor = '#051a05';
+      gradientMid = 'rgba(57, 255, 20, 0.15)';
+      gradientEnd = 'rgba(57, 255, 20, 0.4)';
+      particleColor1 = COLORS.SWAMP_GREEN;
+      particleColor2 = '#317700';
+    } else if (level === 11) {
       bgColor = '#001a00';
       gradientMid = 'rgba(57, 255, 20, 0.2)';
       gradientEnd = 'rgba(57, 255, 20, 0.5)';
@@ -336,7 +324,6 @@ const Game: React.FC = () => {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     
-    // Feedback sonoro al iniciar un nivel
     playClickSound();
 
     const py = getPaddleY(dimensions.height, deviceType);
@@ -365,21 +352,20 @@ const Game: React.FC = () => {
     trailRef.current = {};
     particlesRef.current = [];
 
-    // LEVEL LOGIC
     let levelData = LEVEL_1_DATA;
-    if (lvl === 6) {
-      levelData = LABYRINTH_DATA;
-    } else if (lvl === 7) {
+    if (lvl === 11) {
       levelData = SHREK_FACE_DATA;
-    } else if (lvl === 2) {
-      levelData = LEVEL_2_DATA;
-    } else if (lvl === 3) {
-      levelData = LEVEL_2_DATA;
+    } else if (lvl >= 6 && lvl <= 10) {
+      levelData = LEVEL_6_DATA;
+    } else if (lvl === 5) {
+      levelData = LEVEL_5_DATA;
     } else if (lvl === 4) {
       levelData = LEVEL_1_DATA;
-    } else if (lvl === 5) {
-      levelData = SPIDER_64_DATA;
-    } else if (lvl === 1) {
+    } else if (lvl === 3) {
+      levelData = LEVEL_3_DATA; 
+    } else if (lvl === 2) {
+      levelData = LEVEL_2_DATA;
+    } else {
       levelData = LEVEL_1_DATA;
     }
     
@@ -391,7 +377,7 @@ const Game: React.FC = () => {
     ];
 
     ghostsRef.current = spawnAreas.map((area, index) => {
-      const isOgreLevel = lvl === 5 || lvl === 6 || lvl === 7;
+      const isOgreLevel = lvl === 11;
       const baseScale = PIXEL_SIZE * 0.5;
       const gPixelSize = baseScale * (1 + index * 0.2);
       
@@ -417,8 +403,8 @@ const Game: React.FC = () => {
       };
 
       if ((lvl >= 4) && index === 5) {
-        enemy.health = isOgreLevel ? (lvl === 6 || lvl === 7 ? 40 : 20) : 35;
-        enemy.maxHealth = isOgreLevel ? (lvl === 6 || lvl === 7 ? 40 : 20) : 35;
+        enemy.health = isOgreLevel ? 40 : 35;
+        enemy.maxHealth = isOgreLevel ? 40 : 35;
       }
 
       return enemy;
@@ -438,7 +424,6 @@ const Game: React.FC = () => {
   }, [dimensions, deviceType, getPaddleY, gameState.speedMultiplier, playClickSound]);
 
   const setView = useCallback((view: GameView) => {
-    // Feedback sonoro al navegar por el menú
     playClickSound();
 
     ballsRef.current = [];
@@ -484,7 +469,6 @@ const Game: React.FC = () => {
   }, [gameState.started, gameState.isPaused, gameState.view, dimensions.width]);
 
   const update = useCallback(() => {
-    // Menu Fireflies Movement
     firefliesRef.current.forEach(fly => {
       fly.x += fly.vx;
       fly.y += fly.vy;
@@ -591,7 +575,6 @@ const Game: React.FC = () => {
           if (Math.abs(newDx) < 0.8) newDx = (newDx >= 0 ? 0.8 : -0.8);
           ball.dx = newDx;
           ball.color = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
-          paddle.color = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
           playSound('paddle');
         }
       }
@@ -656,11 +639,9 @@ const Game: React.FC = () => {
       const charHeight = (grid?.length || 0) * currentPixelSize;
       if (charWidth > 0) {
         const time = Date.now() * 0.001;
-        const floatX = (gameState.level >= 1 && gameState.level <= 4) ? Math.sin(time) * 15 : 0;
-        const floatY = 0;
-
+        const floatX = (gameState.level >= 1 && gameState.level <= 10) ? Math.sin(time) * 15 : 0;
         const charX = (dimensions.width - charWidth) / 2 + floatX;
-        const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2)) + floatY;
+        const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
         
         const checkPoints = [
           { x: ball.x, y: ball.y },
@@ -674,14 +655,15 @@ const Game: React.FC = () => {
         for (const pt of checkPoints) {
           if (collisionProcessed) break;
           const gx = Math.floor((pt.x - charX) / currentPixelSize);
-          const gy = Math.floor((pt.y - charY) / currentPixelSize);
+          const gyInt = Math.floor((pt.y - charY) / currentPixelSize);
+          const gxInt = Math.floor((pt.x - charX) / currentPixelSize);
 
-          if (gx >= 0 && gx < (grid[0]?.length || 0) && gy >= 0 && gy < grid.length) {
-            const pVal = grid[gy][gx];
+          if (gxInt >= 0 && gxInt < (grid[0]?.length || 0) && gyInt >= 0 && gyInt < grid.length) {
+            const pVal = grid[gyInt][gxInt];
             if (pVal === PixelType.EMPTY) continue;
 
-            const pixelCenterX = charX + gx * currentPixelSize + currentPixelSize / 2;
-            const pixelCenterY = charY + gy * currentPixelSize + currentPixelSize / 2;
+            const pixelCenterX = charX + gxInt * currentPixelSize + currentPixelSize / 2;
+            const pixelCenterY = charY + gyInt * currentPixelSize + currentPixelSize / 2;
             const pDiffX = ball.x - pixelCenterX;
             const pDiffY = ball.y - pixelCenterY;
 
@@ -696,7 +678,7 @@ const Game: React.FC = () => {
               playSound('wall');
               collisionProcessed = true;
             } else {
-              grid[gy][gx] = PixelType.EMPTY;
+              grid[gyInt][gxInt] = PixelType.EMPTY;
               if (Math.abs(pDiffX) > Math.abs(pDiffY)) ball.dx *= -1;
               else ball.dy *= -1;
               setGameState(prev => ({ ...prev, score: prev.score + 10 }));
@@ -734,10 +716,9 @@ const Game: React.FC = () => {
       }
 
       const isFiringEnemy = 
-        (gameState.level === 2 && enemy.isLargest) || 
-        (gameState.level === 3 && (enemy.isLargest || index === 4)) ||
-        (gameState.level === 4 && (enemy.isLargest || enemy.id === 'enemy-4' || enemy.id === 'enemy-3')) ||
-        ((gameState.level === 5 || gameState.level === 6 || gameState.level === 7) && (enemy.id === 'enemy-4' || enemy.id === 'enemy-3'));
+        (gameState.level >= 2 && enemy.isLargest) || 
+        (gameState.level >= 3 && (enemy.isLargest || index === 4)) ||
+        (gameState.level >= 4 && (enemy.isLargest || enemy.id === 'enemy-4' || enemy.id === 'enemy-3'));
 
       if (isFiringEnemy) {
         if ((enemy.fireCooldown || 0) <= 0 && ballsRef.current.length >= 2) {
@@ -761,18 +742,18 @@ const Game: React.FC = () => {
     const isFigureCleared = pixelsRemaining === 0;
     
     if (isFigureCleared) {
-      const isFinalLevel = gameState.level === 7;
-      const nextMaxLvl = Math.max(gameState.maxLevelCompleted, gameState.level);
+      const isFinalLevel = gameState.level === 11;
+      const alreadyCompleted = gameState.completedLevels.includes(gameState.level);
+      const nextLevels = alreadyCompleted ? gameState.completedLevels : [...gameState.completedLevels, gameState.level];
       
-      // Persist progress
-      localStorage.setItem(MAX_LEVEL_KEY, nextMaxLvl.toString());
+      localStorage.setItem(COMPLETED_LEVELS_KEY, JSON.stringify(nextLevels));
 
       if (isFinalLevel) {
         setGameState(prev => ({ 
           ...prev, 
           isWin: true, 
           started: false,
-          maxLevelCompleted: nextMaxLvl,
+          completedLevels: nextLevels,
           kofiPhrase: getRandomKofiPhrase()
         }));
       } else {
@@ -780,27 +761,20 @@ const Game: React.FC = () => {
           ...prev, 
           isLevelCleared: true, 
           started: false,
-          maxLevelCompleted: nextMaxLvl
+          completedLevels: nextLevels
         }));
       }
-
-      if (deviceType !== 'desktop' && 'vibrate' in navigator) {
-        navigator.vibrate(200);
-      } else {
-        playSound('win');
-      }
+      playSound('win');
     }
-  }, [gameState.isPaused, gameState.started, gameState.view, gameState.speedMultiplier, gameState.level, gameState.maxLevelCompleted, gameState.isWin, gameState.isGameOver, gameState.isLevelCleared, getDynamicPixelSize, playSound, dimensions.width, dimensions.height, deviceType, getRandomKofiPhrase]);
+  }, [gameState.isPaused, gameState.started, gameState.view, gameState.speedMultiplier, gameState.level, gameState.completedLevels, gameState.isWin, gameState.isGameOver, gameState.isLevelCleared, getDynamicPixelSize, playSound, dimensions.width, dimensions.height, deviceType, getRandomKofiPhrase]);
 
   const drawProgressPhrase = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const phrase = "OGRO BUCHON";
     const isMobile = deviceType === 'mobile';
     
-    // Título grande e imponente
     let titleFontSize = isMobile ? 24 : 48;
     let letterSpacing = isMobile ? 6 : 12;
     
-    // Cálculo dinámico para asegurar que el título quepa en pantalla
     let titleWidth = (phrase.length * titleFontSize) + ((phrase.length - 1) * letterSpacing);
     const maxTitleWidth = w * 0.92;
     if (titleWidth > maxTitleWidth) {
@@ -827,7 +801,8 @@ const Game: React.FC = () => {
       }
       
       nonSpaceCount++;
-      const isUnlocked = nonSpaceCount <= gameState.maxLevelCompleted;
+      // Strict 1:1 matching: letter N lights up only if level N is completed.
+      const isUnlocked = gameState.completedLevels.includes(nonSpaceCount);
       
       if (isUnlocked) {
         ctx.fillStyle = '#ccff00';
@@ -835,35 +810,57 @@ const Game: React.FC = () => {
         ctx.shadowColor = '#ccff00';
         ctx.globalAlpha = 1.0;
       } else {
-        ctx.fillStyle = '#666666';
+        ctx.fillStyle = '#555555'; 
         ctx.shadowBlur = 0;
-        ctx.globalAlpha = 0.6;
+        ctx.globalAlpha = 0.5; 
       }
 
       ctx.fillText(char, startX, startY);
       startX += titleFontSize + letterSpacing;
     }
 
-    // Subtítulo con escalado dinámico/responsivo para que no se corte en móviles
     ctx.restore();
     ctx.save();
-    const subText = "COMPLETA LOS NIVELES PARA RECOLECTAR LAS LETRAS";
-    let subtitleFontSize = isMobile ? 10 : 14; // Tamaño sugerido por usuario
-    ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
-    let subWidth = ctx.measureText(subText).width;
-    
-    // Ajuste dinámico de fuente del subtítulo si aún es demasiado largo
-    const maxSubWidth = w * 0.95;
-    if (subWidth > maxSubWidth) {
-       subtitleFontSize = Math.floor(subtitleFontSize * (maxSubWidth / subWidth));
-       ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
-    }
-
     ctx.fillStyle = '#AAAAAA';
     ctx.textAlign = 'center';
-    ctx.fillText(subText, w / 2, startY + (isMobile ? 30 : 60));
+
+    if (w < 600) {
+      const line1 = "COMPLETA LOS NIVELES PARA DESBLOQUEAR LAS LETRAS";
+      const line2 = "Y RESCATAR AL OGRO EN EL NIVEL 11";
+      let subtitleFontSize = 10;
+      ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
+      
+      const maxSubWidth = w * 0.92;
+      let m1 = ctx.measureText(line1).width;
+      let m2 = ctx.measureText(line2).width;
+      let longest = Math.max(m1, m2);
+      
+      if (longest > maxSubWidth) {
+        subtitleFontSize = Math.floor(subtitleFontSize * (maxSubWidth / longest));
+        subtitleFontSize = Math.max(subtitleFontSize, 6);
+        ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
+      }
+
+      const lineSpacing = subtitleFontSize + 10;
+      const baseSubY = startY + 35;
+      ctx.fillText(line1, w / 2, baseSubY);
+      ctx.fillText(line2, w / 2, baseSubY + lineSpacing);
+    } else {
+      const subText = "COMPLETA LOS NIVELES PARA DESBLOQUEAR LAS LETRAS Y RESCATAR AL OGRO EN EL NIVEL 11";
+      let subtitleFontSize = 14; 
+      ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
+      
+      const maxSubWidth = w * 0.92;
+      let measuredWidth = ctx.measureText(subText).width;
+      if (measuredWidth > maxSubWidth) {
+        subtitleFontSize = Math.floor(subtitleFontSize * (maxSubWidth / measuredWidth));
+        subtitleFontSize = Math.max(subtitleFontSize, 8);
+        ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
+      }
+      ctx.fillText(subText, w / 2, startY + 60);
+    }
     ctx.restore();
-  }, [gameState.maxLevelCompleted, deviceType]);
+  }, [gameState.completedLevels, deviceType]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -871,7 +868,7 @@ const Game: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    if (gameState.view === 'playing' && [1, 2, 3, 4, 5, 6, 7].includes(gameState.level)) {
+    if (gameState.view === 'playing' && gameState.level <= 11) {
       drawDynamicBackground(ctx, dimensions.width, dimensions.height, gameState.level);
     } else {
       ctx.fillStyle = COLORS.BG;
@@ -920,22 +917,21 @@ const Game: React.FC = () => {
     });
 
     ghostsRef.current.forEach(enemy => {
+      ctx.save();
       const activeGrid = enemy.isOgre ? HAPPY_FACE_DATA : GHOST_DATA;
       const gPixelSize = enemy.pixelSize;
       
-      ctx.save();
-      
       let bodyColor;
       if (enemy.isOgre) {
-        if (enemy.isSmallest) {
-          bodyColor = neonColor;
-        } else {
-          bodyColor = enemy.isHit ? COLORS.OGRE_BROWN : COLORS.OGRE_GREEN;
-        }
+        bodyColor = enemy.isSmallest ? neonColor : (enemy.isHit ? COLORS.OGRE_BROWN : COLORS.OGRE_GREEN);
         ctx.shadowBlur = (enemy.isHit || enemy.isSmallest) ? 25 : 15;
         ctx.shadowColor = bodyColor;
       } else {
-        bodyColor = enemy.isSmallest ? neonColor : (enemy.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
+        if ((gameState.level >= 1 && gameState.level <= 10) && !enemy.isSmallest) {
+          bodyColor = enemy.isHit ? COLORS.ACID_LIME_YELLOW : COLORS.SWAMP_BROWN;
+        } else {
+          bodyColor = enemy.isSmallest ? neonColor : (enemy.isHit ? COLORS.GHOST_BLUE : COLORS.GHOST_PINK);
+        }
         ctx.shadowBlur = (enemy.isHit || enemy.isSmallest) ? 20 : 10;
         ctx.shadowColor = bodyColor;
       }
@@ -946,17 +942,11 @@ const Game: React.FC = () => {
           if (pixel === PixelType.EMPTY) continue;
           
           if (enemy.isOgre) {
-            if (pixel === PixelType.OGRE_BODY) {
-              ctx.fillStyle = bodyColor;
-            } else {
-              ctx.fillStyle = COLORS.OGRE_EYE;
-            }
+            if (pixel === PixelType.OGRE_BODY) ctx.fillStyle = bodyColor;
+            else ctx.fillStyle = COLORS.OGRE_EYE;
           } else {
-            if (pixel === PixelType.GHOST_BODY) {
-                ctx.fillStyle = bodyColor;
-            } else {
-                ctx.fillStyle = COLORS.GHOST_EYE;
-            }
+            if (pixel === PixelType.GHOST_BODY) ctx.fillStyle = bodyColor;
+            else ctx.fillStyle = COLORS.GHOST_EYE;
           }
           ctx.fillRect(enemy.x + x * gPixelSize, enemy.y + y * gPixelSize, gPixelSize, gPixelSize);
         }
@@ -970,12 +960,10 @@ const Game: React.FC = () => {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(barX, barY, barW, barH);
         const currentW = (enemy.health / enemy.maxHealth) * barW;
-        ctx.fillStyle = enemy.isOgre ? bodyColor : '#FF3131'; 
+        ctx.fillStyle = enemy.isOgre ? (enemy.isHit ? COLORS.OGRE_BROWN : COLORS.OGRE_GREEN) : '#FF3131'; 
         ctx.fillRect(barX, barY, currentW, barH);
-        ctx.save();
         ctx.strokeStyle = '#FFFFFF'; 
         ctx.strokeRect(barX, barY, barW, barH);
-        ctx.restore();
       }
       ctx.restore();
     });
@@ -983,14 +971,12 @@ const Game: React.FC = () => {
     const grid = charGridRef.current;
     if (grid[0]?.length > 1) {
       const time = Date.now() * 0.001;
-      const floatX = (gameState.level >= 1 && gameState.level <= 4) ? Math.sin(time) * 15 : 0;
-      const floatY = 0;
-
+      const floatX = (gameState.level >= 1 && gameState.level <= 10) ? Math.sin(time) * 15 : 0;
       const currentPixelSize = getDynamicPixelSize(grid[0].length);
       const charWidth = grid[0].length * currentPixelSize;
       const charHeight = grid.length * currentPixelSize;
       const charX = (dimensions.width - charWidth) / 2 + floatX;
-      const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2)) + floatY;
+      const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
 
       for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
@@ -1006,13 +992,6 @@ const Game: React.FC = () => {
             case PixelType.SPIDER_BODY_GREEN: ctx.fillStyle = COLORS.SPIDER_BODY_GREEN; break;
             case PixelType.SPIDER_BODY_DARK: ctx.fillStyle = COLORS.SPIDER_BODY_DARK; break;
             case PixelType.SPIDER_LEGS: ctx.fillStyle = COLORS.SPIDER_LEGS; break;
-            case PixelType.RAT_FUR_MID: ctx.fillStyle = COLORS.RAT_FUR_MID; break;
-            case PixelType.RAT_FUR_DARK: ctx.fillStyle = COLORS.RAT_FUR_DARK; break;
-            case PixelType.RAT_FUR_LIGHT: ctx.fillStyle = COLORS.RAT_FUR_LIGHT; break;
-            case PixelType.RAT_BELLY: ctx.fillStyle = COLORS.RAT_BELLY; break;
-            case PixelType.RAT_PINK: ctx.fillStyle = COLORS.RAT_PINK; break;
-            case PixelType.RAT_EYE: ctx.fillStyle = COLORS.RAT_EYE; break;
-            case PixelType.RAT_OUTLINE: ctx.fillStyle = COLORS.RAT_OUTLINE; break;
             case PixelType.METAL: ctx.fillStyle = COLORS.METAL_GREY; break;
             case PixelType.LAB_BLUE: ctx.fillStyle = COLORS.LAB_BLUE; break;
             case PixelType.OGRE_OUTLINE: ctx.fillStyle = COLORS.OGRE_OUTLINE; break;
@@ -1030,20 +1009,19 @@ const Game: React.FC = () => {
     const paddle = paddleRef.current;
     ctx.save();
     ctx.fillStyle = paddle.color;
-    if (paddle.color !== COLORS.PADDLE) {
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = paddle.color;
-    }
-    let startX = 0;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = paddle.color;
+    
+    let pstartX = 0;
     const sortedHoles = [...paddle.holes].sort((a, b) => a.x - b.x);
     sortedHoles.forEach(hole => {
-      if (hole.x > startX) {
-        ctx.fillRect(paddle.x + startX, paddle.y, hole.x - startX, paddle.height);
+      if (hole.x > pstartX) {
+        ctx.fillRect(paddle.x + pstartX, paddle.y, hole.x - pstartX, paddle.height);
       }
-      startX = Math.max(startX, hole.x + hole.width);
+      pstartX = Math.max(pstartX, hole.x + hole.width);
     });
-    if (startX < paddle.width) {
-      ctx.fillRect(paddle.x + startX, paddle.y, paddle.width - startX, paddle.height);
+    if (pstartX < paddle.width) {
+      ctx.fillRect(paddle.x + pstartX, paddle.y, paddle.width - pstartX, paddle.height);
     }
     ctx.restore();
 
@@ -1072,7 +1050,7 @@ const Game: React.FC = () => {
       ctx.restore();
     });
 
-  }, [dimensions, gameState.level, gameState.view, gameState.isGameOver, gameState.isWin, gameState.isLevelCleared, getDynamicPixelSize, frameCounterRef.current, playClickSound, drawProgressPhrase]);
+  }, [dimensions, gameState.level, gameState.view, gameState.isGameOver, gameState.isWin, gameState.isLevelCleared, getDynamicPixelSize, frameCounterRef.current, drawProgressPhrase]);
 
   const loop = useCallback(() => {
     update();
@@ -1085,10 +1063,47 @@ const Game: React.FC = () => {
     return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
   }, [loop]);
 
+  const getLevelButtonStyle = (l: number) => {
+    if (l === 11) {
+      return {
+        animation: 'rainbow-border 4s linear infinite',
+        borderWidth: '4px',
+        borderStyle: 'solid',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)'
+      };
+    }
+    
+    const t = (l - 1) / 9; // 0 para l=1, 1 para l=10
+    const r = Math.round(57 + (15 - 57) * t);
+    const g = Math.round(255 + (61 - 255) * t);
+    const b = Math.round(20 + (15 - 20) * t);
+    
+    const borderColor = `rgb(${r}, ${g}, ${b})`;
+    
+    return {
+      borderColor: borderColor,
+      borderWidth: '4px',
+      borderStyle: 'solid',
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    };
+  };
+
   return (
     <div className="fixed inset-0 flex flex-col items-center bg-[#051a05] text-white font-['Press_Start_2P'] select-none">
+      <style>{`
+        @keyframes rainbow-border {
+          0% { border-color: #ff0000; }
+          17% { border-color: #ff8800; }
+          33% { border-color: #ffff00; }
+          50% { border-color: #00ff00; }
+          67% { border-color: #0000ff; }
+          83% { border-color: #8800ff; }
+          100% { border-color: #ff0000; }
+        }
+      `}</style>
       <div className="z-10 w-full p-4 flex flex-col items-center bg-green-950/70 backdrop-blur-md border-b-4 border-green-900">
-        <h1 className="text-sm md:text-lg lg:text-2xl font-bold mb-2 tracking-widest text-lime-400 text-center drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+        <h1 className="text-sm md:text-lg lg:text-2xl font-bold mb-2 tracking-widest text-center drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" style={{ color: '#a3e635' }}>
           EL OGRO BUCHON
         </h1>
         <div className="flex justify-between w-full max-w-4xl px-2 items-center">
@@ -1158,31 +1173,36 @@ const Game: React.FC = () => {
           <div className="absolute inset-0 bg-green-950/40 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
             <h2 className="text-lg md:text-2xl mb-12 text-yellow-400 uppercase tracking-widest drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">SELECCIONAR NIVEL</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl px-4 pb-8">
-              {[1, 2, 3, 4, 5, 6, 7].map((l) => (
-                <button 
-                  key={l}
-                  onClick={() => initGame(l)} 
-                  className={`group flex flex-col items-center p-6 bg-opacity-40 border-4 transition-all rounded-none shadow-[4px_4px_0px_rgba(0,0,0,0.5)] ${
-                    l === 1 || l === 7 ? 'bg-green-900 border-green-600 hover:bg-green-600/30' :
-                    l === 2 ? 'bg-red-900 border-red-600 hover:bg-red-600/30' :
-                    l === 3 ? 'bg-orange-900 border-orange-600 hover:bg-orange-600/30' :
-                    l === 4 ? 'bg-purple-900 border-purple-600 hover:bg-purple-600/30' :
-                    l === 5 ? 'bg-green-800 border-lime-600 hover:bg-lime-600/30' :
-                    'bg-slate-900 border-slate-500 hover:bg-slate-600/30'
-                  }`}
-                >
-                  <span className="text-[10px] md:text-xs mb-2 text-white">NIVEL {l}</span>
-                  <span className="text-[8px] uppercase text-lime-100">
-                    {l === 1 ? 'EL BLOQUE DE LODO' :
-                     l === 2 ? 'ENERGÍA FRÍA' :
-                     l === 3 ? 'LODO TÓXICO' :
-                     l === 4 ? 'FANTASMA ÉLITE' :
-                     l === 5 ? 'SONRISA DEL PANTANO' :
-                     l === 6 ? 'EL LABERINTO FINAL' :
-                     'EL RETORNO (LEVEL 7)'}
-                  </span>
-                </button>
-              ))}
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((l) => {
+                const requiredLevels = [1,2,3,4,5,6,7,8,9,10];
+                const isLvl11Locked = l === 11 && !requiredLevels.every(lvl => gameState.completedLevels.includes(lvl));
+                return (
+                  <button 
+                    key={l}
+                    disabled={isLvl11Locked}
+                    onClick={() => initGame(l)} 
+                    style={getLevelButtonStyle(l)}
+                    className={`group flex flex-col items-center p-6 transition-all rounded-none shadow-[4px_4px_0px_rgba(0,0,0,0.5)] ${isLvl11Locked ? 'cursor-not-allowed opacity-80' : 'hover:scale-105 active:scale-95'}`}
+                  >
+                    <span className="text-[10px] md:text-xs mb-2 text-[#FFFFFF] font-bold">
+                      {`NIVEL ${l}`}
+                    </span>
+                    <span className="text-[8px] uppercase tracking-tight" style={{ color: '#a3e635' }}>
+                      {l === 1 ? 'EL CHALÁN 🧹' :
+                       l === 2 ? 'RECIÉN LLEGADO 🎒' :
+                       l === 3 ? 'EL PLEBE 🧢' :
+                       l === 4 ? 'SOCIO DEL PANTANO 🤝' :
+                       l === 5 ? 'MANO DERECHA 🤜' :
+                       l === 6 ? 'EL MERO MERO 🤠' :
+                       l === 7 ? 'EL PATRÓN 👔' :
+                       l === 8 ? 'JEFE DE JEFES 🐯' :
+                       l === 9 ? 'EL CAPO MAYOR 🧿' :
+                       l === 10 ? 'LEYENDA VIVIENTE 👑' :
+                       isLvl11Locked ? '🔒 MODO BELICÓN BLOQUEADO' : '🔥 MODO BELICÓN ACTIVADO'}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
             <button
               onClick={() => setView('start')}
