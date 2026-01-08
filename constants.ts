@@ -1,4 +1,3 @@
-
 import { PixelType } from './types';
 
 export const PADDLE_WIDTH = 120;
@@ -77,7 +76,7 @@ export const LEVEL_1_DATA: number[][] = [
   [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 ];
 
-// Nivel 2: Letra G de Lodo
+// Nivel 2: Letra G de Lodo (Normalizado a 40x40)
 export const LEVEL_2_DATA: number[][] = [
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -121,7 +120,7 @@ export const LEVEL_2_DATA: number[][] = [
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 ];
 
-// Nivel 3: Letra R de Lodo
+// Nivel 3: Letra R de Lodo (Normalizado a 40x40)
 export const LEVEL_3_DATA: number[][] = [
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -141,8 +140,8 @@ export const LEVEL_3_DATA: number[][] = [
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,3,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0],
-[0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,3,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,3,3,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0],
@@ -224,6 +223,119 @@ export const LEVEL_6_DATA: number[][] = Array(40).fill(0).map((_, y) =>
   })
 );
 
+// Nivel 7: Laberinto Buchón III (Letra C con contorno negro)
+export const LEVEL_7_DATA: number[][] = Array(40).fill(0).map((_, y) => 
+  Array(40).fill(0).map((_, x) => {
+    const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
+    // Apertura reducida al 50% (3 bloques en lugar de 6)
+    const isTopEntrance = y <= 2 && x >= 19 && x <= 21;
+    
+    if (isBorder) {
+      if (isTopEntrance) return 0;
+      return PixelType.METAL;
+    }
+    
+    const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
+    if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
+
+    const isCLeftStem = (x >= 10 && x <= 12) && (y >= 8 && y <= 31);
+    const isCTopBar = (y >= 8 && y <= 10) && (x >= 12 && x <= 27);
+    const isCBottomBar = (y >= 29 && y <= 31) && (x >= 12 && x <= 27);
+
+    if (isCLeftStem || isCTopBar || isCBottomBar) {
+      return PixelType.WIZARD_BLACK;
+    }
+
+    return PixelType.WIZARD_CLOAK;
+  })
+);
+
+// Nivel 8: Laberinto Buchón IV (Figura de Nivel 7 pero con una H central con contorno negro)
+export const LEVEL_8_DATA: number[][] = Array(40).fill(0).map((_, y) => 
+  Array(40).fill(0).map((_, x) => {
+    const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
+    // Apertura reducida al 50% (3 bloques en lugar de 6)
+    const isTopEntrance = y <= 2 && x >= 19 && x <= 21;
+    
+    if (isBorder) {
+      if (isTopEntrance) return 0;
+      return PixelType.METAL;
+    }
+    
+    const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
+    if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
+
+    // Estructura de la H dentro del área de la figura del nivel 7
+    const isHLeftStem = (x >= 10 && x <= 12) && (y >= 8 && y <= 31);
+    const isHRightStem = (x >= 25 && x <= 27) && (y >= 8 && y <= 31);
+    const isHMidBar = (y >= 19 && y <= 21) && (x >= 13 && x <= 24);
+
+    if (isHLeftStem || isHRightStem || isHMidBar) {
+      return PixelType.WIZARD_BLACK;
+    }
+
+    return PixelType.WIZARD_CLOAK;
+  })
+);
+
+// Nivel 9: Laberinto Buchón V (Figura de Nivel 7 pero con una O central con contorno negro)
+export const LEVEL_9_DATA: number[][] = Array(40).fill(0).map((_, y) => 
+  Array(40).fill(0).map((_, x) => {
+    const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
+    // Apertura reducida al 50% (3 bloques en lugar de 6)
+    const isTopEntrance = y <= 2 && x >= 19 && x <= 21;
+    
+    if (isBorder) {
+      if (isTopEntrance) return 0;
+      return PixelType.METAL;
+    }
+    
+    const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
+    if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
+
+    const isOOuter = (x >= 10 && x <= 27) && (y >= 8 && y <= 31);
+    const isOInner = (x >= 13 && x <= 24) && (y >= 11 && y <= 28);
+
+    if (isOOuter && !isOInner) {
+      return PixelType.WIZARD_BLACK;
+    }
+
+    return PixelType.WIZARD_CLOAK;
+  })
+);
+
+// Nivel 10: Laberinto Buchón VI (Figura de Nivel 7 pero con una N central con contorno negro)
+export const LEVEL_10_DATA: number[][] = Array(40).fill(0).map((_, y) => 
+  Array(40).fill(0).map((_, x) => {
+    const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
+    // Apertura reducida al 50% (3 bloques en lugar de 6)
+    const isTopEntrance = y <= 2 && x >= 19 && x <= 21;
+    
+    if (isBorder) {
+      if (isTopEntrance) return 0;
+      return PixelType.METAL;
+    }
+    
+    const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
+    if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
+
+    const isNLeftStem = (x >= 10 && x <= 12) && (y >= 8 && y <= 31);
+    const isNRightStem = (x >= 25 && x <= 27) && (y >= 8 && y <= 31);
+    
+    // Diagonal para la N
+    const diagWidth = 2;
+    const normalizedY = (y - 8) / 23;
+    const targetX = 12 + normalizedY * 13;
+    const isNDiagonal = (x >= targetX - diagWidth && x <= targetX + diagWidth) && (y >= 8 && y <= 31);
+
+    if (isNLeftStem || isNRightStem || isNDiagonal) {
+      return PixelType.WIZARD_BLACK;
+    }
+
+    return PixelType.WIZARD_CLOAK;
+  })
+);
+
 export const LABYRINTH_DATA: number[][] = Array(40).fill(0).map((_, y) => 
   Array(40).fill(0).map((_, x) => {
     const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
@@ -246,17 +358,17 @@ const L = PixelType.OGRE_FACE_LIGHT;
 
 export const SHREK_FACE_DATA: number[][] = [
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,M,M,M,M,M,M,M,M,O,O,_,_ ,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_, _,_,_,_,_,_,_,O,O,M,M,M,M,M,M,M,M,O,O,_,_ ,_,_,_,_,_,_,_,_,_,_,_,_],
   [_,_,_,_,_,_,_,_,_, _ ,_,_,O,O,M,M,M,M,M,M,M,M,M,M,M,M,O,O,_,_,_,_,_,_,_,_,_,_ ,_],
-  [_,_,_,_,_,_,_ ,_ ,_, _,_,O,M,M,M,M,M,M,D,D,D,D,M,M,M,M,M,M,O,_,_ ,_,_ ,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_ ,_ ,_,O,M,M,M,D,D,D,D,M,M,M,M,D,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_,_,_,_,_],
-  [_,_,_,_,_,_,_ ,_,_,O,M,M,D,D,M,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_ ,_,_,O,M,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
+  [_,_,_,_,_,_ ,_ ,_ ,_, _,_,O,M,M,M,M,M,M,D,D,D,D,M,M,M,M,M,M,O,_,_ ,_,_ ,_ ,_ ,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_ ,_ ,_,O,M,M,M,D,D,D,D,M,M,M,M,D,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_,_,_,_,_],
+  [_,_,_,_,_,_ ,_ ,_ ,_,_,O,M,M,D,D,M,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
+  [_,_,_,_,_,_ ,_ ,_,O,M,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
   [O,O,O,_,_,_,_,_,O,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_ ,_ ,_ ,O,O,O],
   [O,M,M,O,_,_ ,_ ,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_ ,_ ,O,M,M,O],
   [O,M,M,M,O,O,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,O,O,M,M,M,O],
   [_,O,M,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,M,M,O,_],
-  [_,_,O,M,M,M,M,M,M,O,M,M,M,M,M,O,M,M,M,M,M,O,M,M,M,M,M,O,M,M,M,M,M,M,M,O,_,_],
+  [_,_,O,M,M,M,M,M,M,O,M,M,M,M,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,M,M,O,_,_],
   [_,_,_,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,M,O,_,_],
   [_,_,_,_,O,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,_,_],
   [_,_,_,_,O,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,O,_,_],
@@ -275,7 +387,7 @@ export const SHREK_FACE_DATA: number[][] = [
   [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
   [_,_,_,_,_,O,D,M,M,O,L,L,L,L,L,L,L,L,L,L,L,O,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
   [_,_,_,_,_,_,_,_,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
+  [_,_,_,_,_,_ ,_ ,_ ,O,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
   [_,_,_,_,_,_ ,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
   [_,_,_,_,_,_,_,_,_,_,O,D,D,M,M,M,M,M,M,M,M,D,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
   [_,_,_,_,_,_,_,_,_,_,_,O,O,D,D,D,D,D,D,D,D,O,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
@@ -284,8 +396,8 @@ export const SHREK_FACE_DATA: number[][] = [
 ];
 
 export const SPIDER_64_DATA: number[][] = Array(32).fill(0).map((_, y) => 
-  Array(32).fill(0).map((_, x) => {
-    const dx = x - 16;
+  Array(40).fill(0).map((_, x) => {
+    const dx = x - 20;
     const dy = y - 16;
     const dist = Math.sqrt(dx*dx + dy*dy);
     if (dist < 6) return PixelType.SPIDER_BODY_DARK;

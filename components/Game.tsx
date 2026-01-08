@@ -1,4 +1,3 @@
-
 import { 
   PADDLE_WIDTH, 
   PADDLE_HEIGHT, 
@@ -11,6 +10,10 @@ import {
   LEVEL_3_DATA,
   LEVEL_5_DATA,
   LEVEL_6_DATA,
+  LEVEL_7_DATA,
+  LEVEL_8_DATA,
+  LEVEL_9_DATA,
+  LEVEL_10_DATA,
   SPIDER_64_DATA,
   LABYRINTH_DATA,
   GHOST_DATA,
@@ -46,7 +49,7 @@ const MAX_BALLS = 16;
 const SPEED_STORAGE_KEY = 'wizard-breaker-speed-multiplier';
 const COMPLETED_LEVELS_KEY = 'ogro-buchon-completed-levels-list';
 
-const Game: React.FC = () => {
+export const Game: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -130,6 +133,8 @@ const Game: React.FC = () => {
   const keysRef = useRef<{ [key: string]: boolean }>({});
   const animationFrameRef = useRef<number | undefined>(undefined);
   const frameCounterRef = useRef<number>(0);
+  // Referencia para sincronizar el movimiento lateral de la figura central
+  const floatXRef = useRef<number>(0);
 
   const getDynamicPixelSize = useCallback((gridWidth: number) => {
     const maxCharacterWidth = dimensions.width * (dimensions.width < 640 ? 0.85 : 0.65);
@@ -355,14 +360,22 @@ const Game: React.FC = () => {
     let levelData = LEVEL_1_DATA;
     if (lvl === 11) {
       levelData = SHREK_FACE_DATA;
-    } else if (lvl >= 6 && lvl <= 10) {
+    } else if (lvl === 10) {
+      levelData = LEVEL_10_DATA;
+    } else if (lvl === 9) {
+      levelData = LEVEL_9_DATA;
+    } else if (lvl === 8) {
+      levelData = LEVEL_8_DATA;
+    } else if (lvl === 7) {
+      levelData = LEVEL_7_DATA;
+    } else if (lvl === 6) {
       levelData = LEVEL_6_DATA;
     } else if (lvl === 5) {
       levelData = LEVEL_5_DATA;
     } else if (lvl === 4) {
       levelData = LEVEL_1_DATA;
     } else if (lvl === 3) {
-      levelData = LEVEL_3_DATA; 
+      levelData = LEVEL_3_DATA;
     } else if (lvl === 2) {
       levelData = LEVEL_2_DATA;
     } else {
@@ -380,9 +393,7 @@ const Game: React.FC = () => {
       const isOgreLevel = lvl === 11;
       const baseScale = PIXEL_SIZE * 0.5;
       const gPixelSize = baseScale * (1 + index * 0.2);
-      
       const activeSpriteData = isOgreLevel ? HAPPY_FACE_DATA : GHOST_DATA;
-      
       const gw = activeSpriteData[0].length * gPixelSize;
       const gh = activeSpriteData.length * gPixelSize;
       
@@ -425,7 +436,6 @@ const Game: React.FC = () => {
 
   const setView = useCallback((view: GameView) => {
     playClickSound();
-
     ballsRef.current = [];
     projectilesRef.current = [];
     ghostsRef.current = [];
@@ -469,6 +479,11 @@ const Game: React.FC = () => {
   }, [gameState.started, gameState.isPaused, gameState.view, dimensions.width]);
 
   const update = useCallback(() => {
+    const time = Date.now() * 0.001;
+    // Sincronización del movimiento flotante para el frame actual
+    const floatX = (gameState.level >= 1 && gameState.level <= 10) ? Math.sin(time) * 15 : 0;
+    floatXRef.current = floatX;
+
     firefliesRef.current.forEach(fly => {
       fly.x += fly.vx;
       fly.y += fly.vy;
@@ -488,9 +503,10 @@ const Game: React.FC = () => {
     const currentSpeed = BALL_SPEED * gameState.speedMultiplier;
     const currentPixelSize = getDynamicPixelSize(grid[0]?.length || 1);
 
+    // Limpieza de partículas acelerada para evitar estelas "fantasmales" que parezcan bloques
     particlesRef.current = particlesRef.current.filter(p => {
       p.x += p.vx; p.y += p.vy;
-      p.life -= 0.008;
+      p.life -= 0.03; 
       return p.life > 0;
     });
 
@@ -589,7 +605,6 @@ const Game: React.FC = () => {
           ball.y - ball.radius < enemy.y + enemy.height
         ) {
           overlappedEnemyId = enemy.id;
-          
           if (enemy.health !== undefined) {
             enemy.health -= 1;
             if (enemy.health <= 0) {
@@ -598,7 +613,6 @@ const Game: React.FC = () => {
               setGameState(prev => ({ ...prev, score: prev.score + 1000 }));
             }
           }
-
           if (enemy.isSmallest && ball.lastSpawnId !== enemy.id) {
             if (activeBalls.length + newSpawnedBalls.length < MAX_BALLS) {
               newSpawnedBalls.push({
@@ -638,9 +652,8 @@ const Game: React.FC = () => {
       const charWidth = (grid[0]?.length || 0) * currentPixelSize;
       const charHeight = (grid?.length || 0) * currentPixelSize;
       if (charWidth > 0) {
-        const time = Date.now() * 0.001;
-        const floatX = (gameState.level >= 1 && gameState.level <= 10) ? Math.sin(time) * 15 : 0;
-        const charX = (dimensions.width - charWidth) / 2 + floatX;
+        // Uso de la referencia sincronizada floatXRef
+        const charX = (dimensions.width - charWidth) / 2 + floatXRef.current;
         const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
         
         const checkPoints = [
@@ -654,36 +667,57 @@ const Game: React.FC = () => {
         let collisionProcessed = false;
         for (const pt of checkPoints) {
           if (collisionProcessed) break;
-          const gx = Math.floor((pt.x - charX) / currentPixelSize);
-          const gyInt = Math.floor((pt.y - charY) / currentPixelSize);
           const gxInt = Math.floor((pt.x - charX) / currentPixelSize);
+          const gyInt = Math.floor((pt.y - charY) / currentPixelSize);
 
-          if (gxInt >= 0 && gxInt < (grid[0]?.length || 0) && gyInt >= 0 && gyInt < grid.length) {
-            const pVal = grid[gyInt][gxInt];
-            if (pVal === PixelType.EMPTY) continue;
+          if (gyInt >= 0 && gyInt < grid.length) {
+            const row = grid[gyInt];
+            if (gxInt >= 0 && gxInt < row.length) {
+              const pVal = row[gxInt];
+              if (pVal === undefined || pVal === PixelType.EMPTY) continue;
 
-            const pixelCenterX = charX + gxInt * currentPixelSize + currentPixelSize / 2;
-            const pixelCenterY = charY + gyInt * currentPixelSize + currentPixelSize / 2;
-            const pDiffX = ball.x - pixelCenterX;
-            const pDiffY = ball.y - pixelCenterY;
+              const pixelCenterX = charX + gxInt * currentPixelSize + currentPixelSize / 2;
+              const pixelCenterY = charY + gyInt * currentPixelSize + currentPixelSize / 2;
+              const pDiffX = ball.x - pixelCenterX;
+              const pDiffY = ball.y - pixelCenterY;
 
-            if (pVal === PixelType.METAL) {
-              if (Math.abs(pDiffX) > Math.abs(pDiffY)) {
-                ball.dx = Math.abs(ball.dx) * (pDiffX > 0 ? 1 : -1);
-                ball.x = pixelCenterX + (Math.sign(pDiffX) * (currentPixelSize / 2 + ball.radius + 1));
-              } else {
-                ball.dy = Math.abs(ball.dy) * (pDiffY > 0 ? 1 : -1);
-                ball.y = pixelCenterY + (Math.sign(pDiffY) * (currentPixelSize / 2 + ball.radius + 1));
+              if (pVal === PixelType.METAL) {
+                const overlapX = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffX);
+                const overlapY = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffY);
+                
+                if (overlapX < overlapY) {
+                  ball.dx = Math.sign(pDiffX) * Math.abs(ball.dx);
+                  ball.x = pixelCenterX + Math.sign(pDiffX) * (currentPixelSize / 2 + ball.radius + 0.5);
+                } else {
+                  ball.dy = Math.sign(pDiffY) * Math.abs(ball.dy);
+                  ball.y = pixelCenterY + Math.sign(pDiffY) * (currentPixelSize / 2 + ball.radius + 0.5);
+                }
+                playSound('wall');
+                collisionProcessed = true;
+              } else if (pVal > 0) {
+                // BLOQUEO DE ESCRITURA ESTRICTO: Solo se permite destruir (transición a EMPTY)
+                // Se verifica explícitamente que el valor sea mayor a 0 para proceder.
+                if (grid[gyInt][gxInt] !== PixelType.EMPTY) {
+                  grid[gyInt][gxInt] = PixelType.EMPTY;
+                }
+                
+                // Resolución de colisión AABB mejorada para rebote lateral y vertical
+                const overlapX = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffX);
+                const overlapY = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffY);
+                
+                if (overlapX < overlapY) {
+                  ball.dx = Math.sign(pDiffX) * Math.abs(ball.dx);
+                  // Corrección de posición para evitar que la pelota entre en el área del bloque destruido
+                  ball.x = pixelCenterX + Math.sign(pDiffX) * (currentPixelSize / 2 + ball.radius + 0.1);
+                } else {
+                  ball.dy = Math.sign(pDiffY) * Math.abs(ball.dy);
+                  ball.y = pixelCenterY + Math.sign(pDiffY) * (currentPixelSize / 2 + ball.radius + 0.1);
+                }
+                
+                setGameState(prev => ({ ...prev, score: prev.score + 10 }));
+                playSound('hit');
+                collisionProcessed = true;
               }
-              playSound('wall');
-              collisionProcessed = true;
-            } else {
-              grid[gyInt][gxInt] = PixelType.EMPTY;
-              if (Math.abs(pDiffX) > Math.abs(pDiffY)) ball.dx *= -1;
-              else ball.dy *= -1;
-              setGameState(prev => ({ ...prev, score: prev.score + 10 }));
-              playSound('hit');
-              collisionProcessed = true;
             }
           }
         }
@@ -708,7 +742,6 @@ const Game: React.FC = () => {
       enemy.x += enemy.vx; enemy.y += enemy.vy;
       if (enemy.x <= 0) { enemy.vx = Math.abs(enemy.vx); enemy.x = 0; }
       else if (enemy.x + enemy.width >= dimensions.width) { enemy.vx = -Math.abs(enemy.vx); enemy.x = dimensions.width - enemy.width; }
-      
       if (enemy.y <= 0) { enemy.vy = Math.abs(enemy.vy); enemy.y = 0; }
       else if (enemy.y + enemy.height >= dimensions.height * 0.7) { 
         enemy.vy = -Math.abs(enemy.vy); 
@@ -745,24 +778,12 @@ const Game: React.FC = () => {
       const isFinalLevel = gameState.level === 11;
       const alreadyCompleted = gameState.completedLevels.includes(gameState.level);
       const nextLevels = alreadyCompleted ? gameState.completedLevels : [...gameState.completedLevels, gameState.level];
-      
       localStorage.setItem(COMPLETED_LEVELS_KEY, JSON.stringify(nextLevels));
 
       if (isFinalLevel) {
-        setGameState(prev => ({ 
-          ...prev, 
-          isWin: true, 
-          started: false,
-          completedLevels: nextLevels,
-          kofiPhrase: getRandomKofiPhrase()
-        }));
+        setGameState(prev => ({ ...prev, isWin: true, started: false, completedLevels: nextLevels, kofiPhrase: getRandomKofiPhrase() }));
       } else {
-        setGameState(prev => ({ 
-          ...prev, 
-          isLevelCleared: true, 
-          started: false,
-          completedLevels: nextLevels
-        }));
+        setGameState(prev => ({ ...prev, isLevelCleared: true, started: false, completedLevels: nextLevels }));
       }
       playSound('win');
     }
@@ -771,10 +792,8 @@ const Game: React.FC = () => {
   const drawProgressPhrase = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
     const phrase = "OGRO BUCHON";
     const isMobile = deviceType === 'mobile';
-    
     let titleFontSize = isMobile ? 24 : 48;
     let letterSpacing = isMobile ? 6 : 12;
-    
     let titleWidth = (phrase.length * titleFontSize) + ((phrase.length - 1) * letterSpacing);
     const maxTitleWidth = w * 0.92;
     if (titleWidth > maxTitleWidth) {
@@ -783,27 +802,18 @@ const Game: React.FC = () => {
       letterSpacing = Math.floor(letterSpacing * scale);
       titleWidth = (phrase.length * titleFontSize) + ((phrase.length - 1) * letterSpacing);
     }
-
     let startX = (w - titleWidth) / 2;
     const startY = h * 0.18;
-
     ctx.save();
     ctx.font = `${titleFontSize}px 'Press Start 2P'`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-
     let nonSpaceCount = 0;
     for (let i = 0; i < phrase.length; i++) {
       const char = phrase[i];
-      if (char === ' ') {
-        startX += titleFontSize + letterSpacing;
-        continue;
-      }
-      
+      if (char === ' ') { startX += titleFontSize + letterSpacing; continue; }
       nonSpaceCount++;
-      // Strict 1:1 matching: letter N lights up only if level N is completed.
       const isUnlocked = gameState.completedLevels.includes(nonSpaceCount);
-      
       if (isUnlocked) {
         ctx.fillStyle = '#ccff00';
         ctx.shadowBlur = isMobile ? 8 : 15;
@@ -814,33 +824,27 @@ const Game: React.FC = () => {
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 0.5; 
       }
-
       ctx.fillText(char, startX, startY);
       startX += titleFontSize + letterSpacing;
     }
-
     ctx.restore();
     ctx.save();
     ctx.fillStyle = '#AAAAAA';
     ctx.textAlign = 'center';
-
     if (w < 600) {
       const line1 = "COMPLETA LOS NIVELES PARA DESBLOQUEAR LAS LETRAS";
       const line2 = "Y RESCATAR AL OGRO EN EL NIVEL 11";
       let subtitleFontSize = 10;
       ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
-      
       const maxSubWidth = w * 0.92;
       let m1 = ctx.measureText(line1).width;
       let m2 = ctx.measureText(line2).width;
       let longest = Math.max(m1, m2);
-      
       if (longest > maxSubWidth) {
         subtitleFontSize = Math.floor(subtitleFontSize * (maxSubWidth / longest));
         subtitleFontSize = Math.max(subtitleFontSize, 6);
         ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
       }
-
       const lineSpacing = subtitleFontSize + 10;
       const baseSubY = startY + 35;
       ctx.fillText(line1, w / 2, baseSubY);
@@ -849,7 +853,6 @@ const Game: React.FC = () => {
       const subText = "COMPLETA LOS NIVELES PARA DESBLOQUEAR LAS LETRAS Y RESCATAR AL OGRO EN EL NIVEL 11";
       let subtitleFontSize = 14; 
       ctx.font = `${subtitleFontSize}px 'Press Start 2P'`;
-      
       const maxSubWidth = w * 0.92;
       let measuredWidth = ctx.measureText(subText).width;
       if (measuredWidth > maxSubWidth) {
@@ -867,13 +870,11 @@ const Game: React.FC = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
     if (gameState.view === 'playing' && gameState.level <= 11) {
       drawDynamicBackground(ctx, dimensions.width, dimensions.height, gameState.level);
     } else {
       ctx.fillStyle = COLORS.BG;
       ctx.fillRect(0, 0, dimensions.width, dimensions.height);
-
       firefliesRef.current.forEach(fly => {
         const flicker = (Math.sin(fly.phase) + 1) / 2;
         ctx.save();
@@ -883,25 +884,19 @@ const Game: React.FC = () => {
         ctx.fill();
         ctx.restore();
       });
-
-      if (gameState.view === 'start') {
-        drawProgressPhrase(ctx, dimensions.width, dimensions.height);
-      }
+      if (gameState.view === 'start') { drawProgressPhrase(ctx, dimensions.width, dimensions.height); }
     }
-
     if (gameState.view !== 'playing' && !gameState.isGameOver && !gameState.isWin && !gameState.isLevelCleared) return;
-
     particlesRef.current.forEach(p => {
       ctx.globalAlpha = p.life;
       ctx.fillStyle = p.color;
       ctx.fillRect(p.x, p.y, p.size, p.size);
     });
     ctx.globalAlpha = 1.0;
-
     const neonIndex = Math.floor(frameCounterRef.current / 29) % NEON_COLORS.length;
     const neonColor = NEON_COLORS[neonIndex];
-
     projectilesRef.current.forEach(p => {
+      if (!p) return;
       const pScale = p.width / FIRE_DATA[0].length;
       ctx.save();
       ctx.shadowBlur = 10;
@@ -915,12 +910,10 @@ const Game: React.FC = () => {
       }
       ctx.restore();
     });
-
     ghostsRef.current.forEach(enemy => {
       ctx.save();
       const activeGrid = enemy.isOgre ? HAPPY_FACE_DATA : GHOST_DATA;
       const gPixelSize = enemy.pixelSize;
-      
       let bodyColor;
       if (enemy.isOgre) {
         bodyColor = enemy.isSmallest ? neonColor : (enemy.isHit ? COLORS.OGRE_BROWN : COLORS.OGRE_GREEN);
@@ -935,12 +928,10 @@ const Game: React.FC = () => {
         ctx.shadowBlur = (enemy.isHit || enemy.isSmallest) ? 20 : 10;
         ctx.shadowColor = bodyColor;
       }
-
       for (let y = 0; y < activeGrid.length; y++) {
         for (let x = 0; x < activeGrid[y].length; x++) {
           const pixel = activeGrid[y][x];
           if (pixel === PixelType.EMPTY) continue;
-          
           if (enemy.isOgre) {
             if (pixel === PixelType.OGRE_BODY) ctx.fillStyle = bodyColor;
             else ctx.fillStyle = COLORS.OGRE_EYE;
@@ -951,7 +942,6 @@ const Game: React.FC = () => {
           ctx.fillRect(enemy.x + x * gPixelSize, enemy.y + y * gPixelSize, gPixelSize, gPixelSize);
         }
       }
-
       if (enemy.health !== undefined && enemy.maxHealth !== undefined) {
         const barW = enemy.width;
         const barH = 8;
@@ -967,17 +957,14 @@ const Game: React.FC = () => {
       }
       ctx.restore();
     });
-
     const grid = charGridRef.current;
     if (grid[0]?.length > 1) {
-      const time = Date.now() * 0.001;
-      const floatX = (gameState.level >= 1 && gameState.level <= 10) ? Math.sin(time) * 15 : 0;
       const currentPixelSize = getDynamicPixelSize(grid[0].length);
       const charWidth = grid[0].length * currentPixelSize;
       const charHeight = grid.length * currentPixelSize;
-      const charX = (dimensions.width - charWidth) / 2 + floatX;
+      // Uso de la referencia floatXRef sincronizada con el update
+      const charX = (dimensions.width - charWidth) / 2 + floatXRef.current;
       const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
-
       for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
           const pixel = grid[y][x];
@@ -1005,26 +992,19 @@ const Game: React.FC = () => {
         }
       }
     }
-
     const paddle = paddleRef.current;
     ctx.save();
     ctx.fillStyle = paddle.color;
     ctx.shadowBlur = 15;
     ctx.shadowColor = paddle.color;
-    
     let pstartX = 0;
     const sortedHoles = [...paddle.holes].sort((a, b) => a.x - b.x);
     sortedHoles.forEach(hole => {
-      if (hole.x > pstartX) {
-        ctx.fillRect(paddle.x + pstartX, paddle.y, hole.x - pstartX, paddle.height);
-      }
+      if (hole.x > pstartX) { ctx.fillRect(paddle.x + pstartX, paddle.y, hole.x - pstartX, paddle.height); }
       pstartX = Math.max(pstartX, hole.x + hole.width);
     });
-    if (pstartX < paddle.width) {
-      ctx.fillRect(paddle.x + pstartX, paddle.y, paddle.width - pstartX, paddle.height);
-    }
+    if (pstartX < paddle.width) { ctx.fillRect(paddle.x + pstartX, paddle.y, paddle.width - pstartX, paddle.height); }
     ctx.restore();
-
     ballsRef.current.forEach(ball => {
       const points = trailRef.current[ball.id] || [];
       points.forEach((point, index) => {
@@ -1033,30 +1013,21 @@ const Game: React.FC = () => {
         ctx.save();
         ctx.fillStyle = point.color;
         ctx.globalAlpha = alpha * 0.4;
-        ctx.fillRect(point.x - size/2, point.y - size/2, size, size);
+        ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
         ctx.restore();
       });
-
       ctx.save();
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
       ctx.fillStyle = ball.color; 
-      if (ball.color !== COLORS.BALL) {
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = ball.color;
-      }
+      if (ball.color !== COLORS.BALL) { ctx.shadowBlur = 15; ctx.shadowColor = ball.color; }
       ctx.fill();
       ctx.closePath();
       ctx.restore();
     });
-
   }, [dimensions, gameState.level, gameState.view, gameState.isGameOver, gameState.isWin, gameState.isLevelCleared, getDynamicPixelSize, frameCounterRef.current, drawProgressPhrase]);
 
-  const loop = useCallback(() => {
-    update();
-    draw();
-    animationFrameRef.current = requestAnimationFrame(loop);
-  }, [update, draw]);
+  const loop = useCallback(() => { update(); draw(); animationFrameRef.current = requestAnimationFrame(loop); }, [update, draw]);
 
   useEffect(() => {
     animationFrameRef.current = requestAnimationFrame(loop);
@@ -1065,28 +1036,13 @@ const Game: React.FC = () => {
 
   const getLevelButtonStyle = (l: number) => {
     if (l === 11) {
-      return {
-        animation: 'rainbow-border 4s linear infinite',
-        borderWidth: '4px',
-        borderStyle: 'solid',
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)'
-      };
+      return { animation: 'rainbow-border 4s linear infinite', borderWidth: '4px', borderStyle: 'solid', backgroundColor: 'rgba(0, 0, 0, 0.4)', boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)' };
     }
-    
-    const t = (l - 1) / 9; // 0 para l=1, 1 para l=10
+    const t = (l - 1) / 9;
     const r = Math.round(57 + (15 - 57) * t);
     const g = Math.round(255 + (61 - 255) * t);
     const b = Math.round(20 + (15 - 20) * t);
-    
-    const borderColor = `rgb(${r}, ${g}, ${b})`;
-    
-    return {
-      borderColor: borderColor,
-      borderWidth: '4px',
-      borderStyle: 'solid',
-      backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    };
+    return { borderColor: `rgb(${r}, ${g}, ${b})`, borderWidth: '4px', borderStyle: 'solid', backgroundColor: 'rgba(0, 0, 0, 0.4)' };
   };
 
   return (
@@ -1103,47 +1059,20 @@ const Game: React.FC = () => {
         }
       `}</style>
       <div className="z-10 w-full p-4 flex flex-col items-center bg-green-950/70 backdrop-blur-md border-b-4 border-green-900">
-        <h1 className="text-sm md:text-lg lg:text-2xl font-bold mb-2 tracking-widest text-center drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" style={{ color: '#a3e635' }}>
-          EL OGRO BUCHON
-        </h1>
+        <h1 className="text-sm md:text-lg lg:text-2xl font-bold mb-2 tracking-widest text-center drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" style={{ color: '#a3e635' }}>EL OGRO BUCHON</h1>
         <div className="flex justify-between w-full max-w-4xl px-2 items-center">
           <div className="flex flex-col items-start uppercase text-[8px] md:text-[10px]">
              <span className="text-lime-600 mb-1">Velocidad: {Math.round(gameState.speedMultiplier * 100)}%</span>
-             <input 
-              type="range" min="0.1" max="1.5" step="0.05" value={gameState.speedMultiplier}
-              onChange={(e) => setGameState(prev => ({ ...prev, speedMultiplier: parseFloat(e.target.value) }))}
-              className="w-20 md:w-32 h-1 bg-green-900 rounded-lg appearance-none cursor-pointer accent-lime-500"
-             />
+             <input type="range" min="0.1" max="1.5" step="0.05" value={gameState.speedMultiplier} onChange={(e) => setGameState(prev => ({ ...prev, speedMultiplier: parseFloat(e.target.value) }))} className="w-20 md:w-32 h-1 bg-green-900 rounded-lg appearance-none cursor-pointer accent-lime-500" />
           </div>
           <div className="flex gap-2 md:gap-4 items-center">
-            <button 
-              onClick={togglePauseLocal} disabled={!gameState.started || gameState.isWin || gameState.isGameOver || gameState.isLevelCleared}
-              className={`p-2 rounded transition-all active:scale-95 ${(!gameState.started || gameState.isWin || gameState.isGameOver || gameState.isLevelCleared) ? 'opacity-30' : 'bg-green-700 hover:bg-green-600 border-b-4 border-green-900'}`}
-            >
-              {gameState.isPaused ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-              )}
-            </button>
+            <button onClick={togglePauseLocal} disabled={!gameState.started || gameState.isWin || gameState.isGameOver || gameState.isLevelCleared} className={`p-2 rounded transition-all active:scale-95 ${(!gameState.started || gameState.isWin || gameState.isGameOver || gameState.isLevelCleared) ? 'opacity-30' : 'bg-green-700 hover:bg-green-600 border-b-4 border-green-900'}`}>{gameState.isPaused ? <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> : <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>}</button>
             <p className="text-[10px] md:text-sm uppercase text-lime-300">Puntaje: <span className="text-yellow-400">{gameState.score}</span></p>
           </div>
         </div>
       </div>
-
-      <div 
-        ref={containerRef} 
-        className="relative flex-1 w-full flex items-center justify-center overflow-hidden touch-none"
-        onTouchMove={handleTouch}
-        onTouchStart={handleTouch}
-      >
-        <canvas
-          ref={canvasRef}
-          width={dimensions.width}
-          height={dimensions.height}
-          className="max-w-full max-h-full shadow-2xl bg-black"
-        />
-
+      <div ref={containerRef} className="relative flex-1 w-full flex items-center justify-center overflow-hidden touch-none" onTouchMove={handleTouch} onTouchStart={handleTouch}>
+        <canvas ref={canvasRef} width={dimensions.width} height={dimensions.height} className="max-w-full max-h-full shadow-2xl bg-black" />
         {gameState.view === 'start' && !gameState.isGameOver && !gameState.isWin && !gameState.isLevelCleared && (
           <div className="absolute inset-0 bg-green-950/20 flex flex-col items-center justify-center p-8 text-center z-20">
             <div className="mt-[22%] md:mt-[20%] flex flex-col items-center">
@@ -1151,78 +1080,53 @@ const Game: React.FC = () => {
               <div className="flex flex-col gap-4 w-full max-w-xs items-stretch">
                 <button
                   onClick={() => initGame(1)}
-                  className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]"
+                  className="bg-green-950 hover:bg-green-900 text-white px-8 py-4 text-[10px] md:text-xs font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
                 >
-                  INICIAR MISIÓN
+                  INICIAR MISIÓN 🕹️
                 </button>
                 <button
                   onClick={() => setView('levelSelect')}
-                  className="bg-lime-800 hover:bg-lime-700 text-white px-8 py-4 text-[10px] md:text-xs transition-all border-b-4 border-lime-950 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]"
+                  className="bg-green-950 hover:bg-green-900 text-white px-8 py-4 text-[10px] md:text-xs font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
                 >
-                  SELECCIONAR NIVEL
+                  SELECCIONAR NIVEL 📜
                 </button>
-                <div className="mt-4 flex justify-center scale-110">
-                  <KofiButton phrase={gameState.kofiPhrase} />
-                </div>
+                <div className="mt-4 flex justify-center scale-110"><KofiButton phrase={gameState.kofiPhrase} /></div>
               </div>
             </div>
           </div>
         )}
-
         {gameState.view === 'levelSelect' && (
-          <div className="absolute inset-0 bg-green-950/40 flex flex-col items-center justify-center p-8 text-center z-20 overflow-y-auto">
-            <h2 className="text-lg md:text-2xl mb-12 text-yellow-400 uppercase tracking-widest drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">SELECCIONAR NIVEL</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl px-4 pb-8">
+          <div className="absolute inset-0 bg-green-950/40 flex flex-col items-center justify-start pt-[50px] pb-[25px] px-8 text-center z-20 overflow-y-auto overflow-x-hidden scroll-smooth">
+            <h2 className="text-lg md:text-2xl mb-6 text-yellow-400 uppercase tracking-widest drop-shadow-[2px_2px_0px_rgba(0,0,0,1)] flex-shrink-0">SELECCIONAR NIVEL</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl px-4 pb-12">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((l) => {
                 const requiredLevels = [1,2,3,4,5,6,7,8,9,10];
                 const isLvl11Locked = l === 11 && !requiredLevels.every(lvl => gameState.completedLevels.includes(lvl));
-                return (
-                  <button 
-                    key={l}
-                    disabled={isLvl11Locked}
-                    onClick={() => initGame(l)} 
-                    style={getLevelButtonStyle(l)}
-                    className={`group flex flex-col items-center p-6 transition-all rounded-none shadow-[4px_4px_0px_rgba(0,0,0,0.5)] ${isLvl11Locked ? 'cursor-not-allowed opacity-80' : 'hover:scale-105 active:scale-95'}`}
-                  >
-                    <span className="text-[10px] md:text-xs mb-2 text-[#FFFFFF] font-bold">
-                      {`NIVEL ${l}`}
-                    </span>
-                    <span className="text-[8px] uppercase tracking-tight" style={{ color: '#a3e635' }}>
-                      {l === 1 ? 'EL CHALÁN 🧹' :
-                       l === 2 ? 'RECIÉN LLEGADO 🎒' :
-                       l === 3 ? 'EL PLEBE 🧢' :
-                       l === 4 ? 'SOCIO DEL PANTANO 🤝' :
-                       l === 5 ? 'MANO DERECHA 🤜' :
-                       l === 6 ? 'EL MERO MERO 🤠' :
-                       l === 7 ? 'EL PATRÓN 👔' :
-                       l === 8 ? 'JEFE DE JEFES 🐯' :
-                       l === 9 ? 'EL CAPO MAYOR 🧿' :
-                       l === 10 ? 'LEYENDA VIVIENTE 👑' :
-                       isLvl11Locked ? '🔒 MODO BELICÓN BLOQUEADO' : '🔥 MODO BELICÓN ACTIVADO'}
-                    </span>
-                  </button>
-                );
+                return (<button key={l} disabled={isLvl11Locked} onClick={() => initGame(l)} style={getLevelButtonStyle(l)} className={`group flex flex-col items-center p-6 transition-all rounded-none shadow-[4px_4px_0px_rgba(0,0,0,0.5)] ${isLvl11Locked ? 'cursor-not-allowed opacity-80' : 'hover:scale-105 active:scale-95'}`}><span className="text-[10px] md:text-xs mb-2 text-[#FFFFFF] font-bold">{`NIVEL ${l}`}</span><span className="text-[8px] uppercase tracking-tight" style={{ color: '#a3e635' }}>{l === 1 ? 'EL CHALÁN 🧹' : l === 2 ? 'RECIÉN LLEGADO 🎒' : l === 3 ? 'EL PLEBE 🧢' : l === 4 ? 'SOCIO DEL PANTANO 🤝' : l === 5 ? 'MANO DERECHA 🤜' : l === 6 ? 'EL MERO MERO 🤠' : l === 7 ? 'EL PATRÓN 👔' : l === 8 ? 'JEFE DE JEFES 🐯' : l === 9 ? 'EL CAPO MAYOR 🧿' : l === 10 ? 'LEYENDA VIVIENTE 👑' : isLvl11Locked ? '🔒 MODO BELICÓN BLOQUEADO' : '🔥 MODO BELICÓN ACTIVADO'}</span></button>);
               })}
             </div>
-            <button
-              onClick={() => setView('start')}
-              className="mt-6 text-lime-600 hover:text-white text-[8px] md:text-[10px] uppercase underline underline-offset-4"
-            >
-              VOLVER AL INICIO
-            </button>
+            <button onClick={() => setView('start')} className="mt-6 mb-2 text-lime-600 hover:text-white text-[8px] md:text-[10px] uppercase underline underline-offset-4 flex-shrink-0">VOLVER AL INICIO</button>
           </div>
         )}
-
         {gameState.isPaused && gameState.view === 'playing' && (
           <div className="absolute inset-0 bg-green-950/70 flex flex-col items-center justify-center z-20">
             <h2 className="text-2xl md:text-4xl mb-8 text-yellow-400 animate-pulse tracking-widest drop-shadow-[3px_3px_0px_rgba(0,0,0,1)]">PAUSA</h2>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4">
-              <button onClick={togglePauseLocal} className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1">REANUDAR</button>
-              <button onClick={() => setView('start')} className="bg-red-800 hover:bg-red-700 text-white px-8 py-4 text-xs md:text-sm transition-all border-b-4 border-red-950 active:border-b-0 active:translate-y-1">SALIR</button>
+              <button
+                onClick={togglePauseLocal}
+                className="bg-green-950 hover:bg-green-900 text-white px-8 py-4 text-xs md:text-sm font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                REANUDAR ▶️
+              </button>
+              <button
+                onClick={() => setView('start')}
+                className="bg-red-950 hover:bg-red-900 text-white px-8 py-4 text-xs md:text-sm font-bold transition-all border-4 border-[#ff3131] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                SALIR ❌
+              </button>
             </div>
           </div>
         )}
-
         {gameState.isLevelCleared && (
           <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-30">
             <h2 className="text-xl md:text-2xl mb-4 text-lime-400 uppercase tracking-widest">¡NIVEL SUPERADO!</h2>
@@ -1230,39 +1134,42 @@ const Game: React.FC = () => {
             <div className="flex flex-col gap-4 w-full max-w-xs px-4">
               <button
                 onClick={() => initGame(gameState.level + 1)}
-                className="bg-green-600 hover:bg-green-500 text-white px-8 py-4 text-xs transition-all border-b-4 border-green-800 active:border-b-0 active:translate-y-1"
+                className="bg-green-950 hover:bg-green-900 text-white px-8 py-4 text-xs md:text-sm font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                IR AL NIVEL {gameState.level + 1}
+                IR AL NIVEL {gameState.level + 1} ➡️
               </button>
-              <button onClick={() => setView('levelSelect')} className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 text-[10px] transition-all border-b-4 border-gray-950 active:border-b-0 active:translate-y-1">MENU DE NIVELES</button>
+              <button
+                onClick={() => setView('levelSelect')}
+                className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 text-xs md:text-sm font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                MENU DE NIVELES 📜
+              </button>
             </div>
           </div>
         )}
-
         {(gameState.isGameOver || gameState.isWin) && (
           <div className="absolute inset-0 bg-green-950/90 flex flex-col items-center justify-center z-30">
-            <h2 className={`text-xl md:text-2xl mb-4 ${gameState.isWin ? 'text-lime-400' : 'text-red-500'} uppercase tracking-widest text-center px-4 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]`}>
-              {gameState.isWin ? '¡EL OGRO HA SIDO SACIADO! VICTORIA' : 'HAS SIDO EXPULSADO DEL PANTANO'}
-            </h2>
+            <h2 className={`text-xl md:text-2xl mb-4 ${gameState.isWin ? 'text-lime-400' : 'text-red-500'} uppercase tracking-widest text-center px-4 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]`}>{gameState.isWin ? '¡EL OGRO HA SIDO SACIADO! VICTORIA' : 'HAS SIDO EXPULSADO DEL PANTANO'}</h2>
             <p className="text-xs md:text-sm mb-8 text-lime-200">PUNTAJE FINAL: {gameState.score}</p>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4 items-stretch">
-              <button onClick={() => initGame(gameState.level)} className="bg-white text-black px-8 py-4 text-xs transition-all border-b-4 border-gray-400 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">{gameState.isWin ? 'REPETIR GLORIA' : 'REINTENTAR'}</button>
-              <button onClick={() => setView('start')} className="bg-green-700 hover:bg-green-600 text-white px-8 py-4 text-xs transition-all border-b-4 border-green-900 active:border-b-0 active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">PAGINA DE INICIO</button>
-              <div className="mt-4 flex justify-center">
-                <KofiButton phrase={gameState.kofiPhrase} />
-              </div>
+              <button
+                onClick={() => initGame(gameState.level)}
+                className="bg-white text-black px-8 py-4 text-xs font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                {gameState.isWin ? 'REPETIR GLORIA 🔄' : 'REINTENTAR 🔄'}
+              </button>
+              <button
+                onClick={() => setView('start')}
+                className="bg-green-950 hover:bg-green-900 text-white px-8 py-4 text-xs font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                PAGINA DE INICIO 🏠
+              </button>
+              <div className="mt-4 flex justify-center"><KofiButton phrase={gameState.kofiPhrase} /></div>
             </div>
           </div>
         )}
       </div>
-
-      <div className="hidden md:flex p-4 text-[8px] text-green-700 bg-green-950/40 uppercase gap-8 border-t-2 border-green-900 w-full justify-center">
-        <span>FLECHAS: Moverse</span>
-        <span>P / ESC: Pausa</span>
-        {gameState.view === 'playing' && <span className="text-lime-500">NIVEL: {gameState.level}</span>}
-      </div>
+      <div className="hidden md:flex p-4 text-[8px] text-green-700 bg-green-950/40 uppercase gap-8 border-t-2 border-green-900 w-full justify-center"><span>FLECHAS: Moverse</span><span>P / ESC: Pausa</span>{gameState.view === 'playing' && <span className="text-lime-500">NIVEL: {gameState.level}</span>}</div>
     </div>
   );
 };
-
-export default Game;
