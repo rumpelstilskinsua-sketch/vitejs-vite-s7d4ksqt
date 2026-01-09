@@ -138,7 +138,7 @@ export const LEVEL_3_DATA: number[][] = [
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,3,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,3,3,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,3,0,0,0,0,0,0,0,0],
-[0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0],
+[0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -355,15 +355,18 @@ const O = PixelType.OGRE_OUTLINE;
 const D = PixelType.OGRE_FACE_DARK; 
 const M = PixelType.OGRE_FACE_MAIN; 
 const L = PixelType.OGRE_FACE_LIGHT; 
+const T = PixelType.OGRE_TEETH;
+const S = PixelType.OGRE_SPOT;
+const P = PixelType.RAT_PINK; // Color para moño y detalles femeninos
 
 export const SHREK_FACE_DATA: number[][] = [
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   [_,_,_,_,_,_,_, _,_,_,_,_,_,_,O,O,M,M,M,M,M,M,M,M,O,O,_,_ ,_,_,_,_,_,_,_,_,_,_,_,_],
   [_,_,_,_,_,_,_,_,_, _ ,_,_,O,O,M,M,M,M,M,M,M,M,M,M,M,M,O,O,_,_,_,_,_,_,_,_,_,_ ,_],
-  [_,_,_,_,_,_ ,_ ,_ ,_, _,_,O,M,M,M,M,M,M,D,D,D,D,M,M,M,M,M,M,O,_,_ ,_,_ ,_ ,_ ,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_ ,_ ,_,O,M,M,M,D,D,D,D,M,M,M,M,D,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_,_,_,_,_],
-  [_,_,_,_,_,_ ,_ ,_ ,_,_,O,M,M,D,D,M,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_ ,_ ,_,O,M,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
+  [_,_,_,_,_,_ ,_ ,_ ,_, _,_,O,M,M,M,M,M,M,D,D,D,D,M,M,M,M,M,M,O,_,_ ,_,_ ,_ ,_ ,_],
+  [_,_,_,_,_,_,_,_ ,_ ,_,O,M,M,M,D,D,D,D,M,M,M,M,D,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_],
+  [_,_,_,_,_,_ ,_ ,_ ,_,_,O,M,M,D,D,M,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_],
+  [_,_,_,_,_,_ ,_ ,_,O,M,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_ ,_ ,_ ,_],
   [O,O,O,_,_,_,_,_,O,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_ ,_ ,_ ,O,O,O],
   [O,M,M,O,_,_ ,_ ,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_ ,_ ,O,M,M,O],
   [O,M,M,M,O,O,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,O,O,M,M,M,O],
@@ -380,19 +383,56 @@ export const SHREK_FACE_DATA: number[][] = [
   [_,_,_,_,O,M,M,M,M,M,M,D,O,O,O,O,O,O,O,O,O,O,O,O,O,D,M,M,M,M,M,M,M,O,_,_],
   [_,_,_,_,O,M,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,M,O,_,_],
   [_,_,_,_,O,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,_,O,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,O,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,O,M,M,O,_,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,O,O,_,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,O,D,M,M,O,L,L,L,L,L,L,L,L,L,L,L,O,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_ ,_ ,_ ,O,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_ ,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,_,_,O,D,D,M,M,M,M,M,M,M,M,D,D,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,_,_,_,O,O,D,D,D,D,D,D,D,D,O,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  [_,_,_,_,_,O,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,O,_,_],
+  [_,_,_,_,_,_,O,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,O,M,M,O,_,_],
+  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,O,O,_,_],
+  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_ ,_ ,_],
+  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_ ,_ ,_],
+  [_,_,_,_,_,O,D,M,M,O,L,L,L,L,L,L,L,L,L,L,L,O,M,M,D,O,_,_ ,_ ,_],
+  [_,_,_,_,_,_,_,_,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,_,_ ,_ ,_],
+  [_,_,_,_,_,_ ,_ ,_ ,O,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_],
+  [_,_,_,_,_,_ ,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_],
+  [_,_,_,_,_,_,_,_,_,_,O,D,D,M,M,M,M,M,M,M,M,D,D,O,_,_ ,_ ,_],
+  [_,_,_,_,_,_,_,_,_,_,_,O,O,D,D,D,D,D,D,D,D,O,O,_,_ ,_ ,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_ ,_ ,_ ,_]
+];
+
+export const LEVEL_12_DATA: number[][] = [
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,P,P,P,P,M,M,M,M,O,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,O,O,P,P,P,P,P,P,M,M,M,M,M,M,O,O,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,O,P,P,O,O,P,P,P,D,D,D,D,M,M,M,M,M,M,O,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,O,M,P,P,O,O,P,P,P,M,M,M,M,D,D,D,M,M,M,M,O,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,O,M,P,P,P,P,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,O,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,O,M,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_,_,_,_,_,_,_,_],
+  [O,O,O,_,_,_,_,_,O,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_,_,_,O,O,O],
+  [O,M,M,O,_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_,_,O,M,M,O],
+  [O,M,M,M,O,O,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,O,O,M,M,M,O],
+  [_,O,M,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,M,M,O,_],
+  [_,_,O,M,M,M,M,M,M,O,M,M,M,M,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,M,M,O,_,_],
+  [_,_,_,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,D,D,D,D,D,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,M,D,D,M,M,M,M,M,D,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,D,O,O,O,O,O,O,O,O,O,O,O,O,O,D,M,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,O,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,O,_,_],
+  [_,_,_,_,_,O,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,O,_,_],
+  [_,_,_,_,_,_,O,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,O,M,M,O,_,_],
+  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,O,O,_,_],
+  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_,_,_],
+  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_,_,_],
+  [_,_,_,_,_,O,D,M,M,O,L,L,L,L,L,L,L,L,L,L,L,O,M,M,D,O,_,_,_,_],
+  [_,_,_,_,_,_,_,_,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,_,_,_,_],
+  [_,_,_,_,_,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,O,D,D,M,M,M,M,M,M,M,M,D,D,O,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,O,O,D,D,D,D,D,D,D,D,O,O,_,_ ,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_ ,_ ,_ ,_]
 ];
 
 export const SPIDER_64_DATA: number[][] = Array(32).fill(0).map((_, y) => 

@@ -8,7 +8,7 @@ interface KofiButtonProps {
 const KofiButton: React.FC<KofiButtonProps> = ({ phrase }) => {
   return (
     <a
-      href="https://ko-fi.com/ghosteater1"
+      href="https://ko-fi.com/ogrobuchon"
       target="_blank"
       rel="noopener noreferrer"
       className="group relative inline-flex items-center justify-center px-6 py-3 font-bold text-white transition-all duration-75 active:translate-y-1 active:shadow-none"

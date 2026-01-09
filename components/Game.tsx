@@ -14,6 +14,7 @@ import {
   LEVEL_8_DATA,
   LEVEL_9_DATA,
   LEVEL_10_DATA,
+  LEVEL_12_DATA,
   SPIDER_64_DATA,
   LABYRINTH_DATA,
   GHOST_DATA,
@@ -48,6 +49,8 @@ interface Firefly {
 const MAX_BALLS = 16;
 const SPEED_STORAGE_KEY = 'wizard-breaker-speed-multiplier';
 const COMPLETED_LEVELS_KEY = 'ogro-buchon-completed-levels-list';
+const OGRA_PASSWORD = "OGRA113354";
+const NATITA_PASSWORD = "NATITA229963";
 
 export const Game: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +60,11 @@ export const Game: React.FC = () => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   
+  // Password modal state
+  const [activeSpecialModal, setActiveSpecialModal] = useState<'ogra' | 'natita' | null>(null);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
   const getRandomKofiPhrase = useCallback(() => {
     return KOFI_PHRASES[Math.floor(Math.random() * KOFI_PHRASES.length)];
   }, []);
@@ -133,7 +141,6 @@ export const Game: React.FC = () => {
   const keysRef = useRef<{ [key: string]: boolean }>({});
   const animationFrameRef = useRef<number | undefined>(undefined);
   const frameCounterRef = useRef<number>(0);
-  // Referencia para sincronizar el movimiento lateral de la figura central
   const floatXRef = useRef<number>(0);
 
   const getDynamicPixelSize = useCallback((gridWidth: number) => {
@@ -293,7 +300,7 @@ export const Game: React.FC = () => {
       gradientEnd = 'rgba(57, 255, 20, 0.4)';
       particleColor1 = COLORS.SWAMP_GREEN;
       particleColor2 = '#317700';
-    } else if (level === 11) {
+    } else if (level === 11 || level === 12 || level === 13) {
       bgColor = '#001a00';
       gradientMid = 'rgba(57, 255, 20, 0.2)';
       gradientEnd = 'rgba(57, 255, 20, 0.5)';
@@ -332,10 +339,11 @@ export const Game: React.FC = () => {
     playClickSound();
 
     const py = getPaddleY(dimensions.height, deviceType);
+    const currentPaddleWidth = (lvl === 9 || lvl === 10) ? PADDLE_WIDTH / 2 : PADDLE_WIDTH;
     paddleRef.current = {
-      x: (dimensions.width - PADDLE_WIDTH) / 2,
+      x: (dimensions.width - currentPaddleWidth) / 2,
       y: py,
-      width: PADDLE_WIDTH,
+      width: currentPaddleWidth,
       height: PADDLE_HEIGHT,
       color: COLORS.PADDLE,
       holes: [],
@@ -358,7 +366,9 @@ export const Game: React.FC = () => {
     particlesRef.current = [];
 
     let levelData = LEVEL_1_DATA;
-    if (lvl === 11) {
+    if (lvl === 12 || lvl === 13) {
+      levelData = LEVEL_12_DATA;
+    } else if (lvl === 11) {
       levelData = SHREK_FACE_DATA;
     } else if (lvl === 10) {
       levelData = LEVEL_10_DATA;
@@ -390,7 +400,7 @@ export const Game: React.FC = () => {
     ];
 
     ghostsRef.current = spawnAreas.map((area, index) => {
-      const isOgreLevel = lvl === 11;
+      const isOgreLevel = (lvl === 11 || lvl === 12 || lvl === 13);
       const baseScale = PIXEL_SIZE * 0.5;
       const gPixelSize = baseScale * (1 + index * 0.2);
       const activeSpriteData = isOgreLevel ? HAPPY_FACE_DATA : GHOST_DATA;
@@ -424,7 +434,7 @@ export const Game: React.FC = () => {
     setGameState(prev => ({ 
       ...prev, 
       level: lvl,
-      score: lvl === 1 ? 0 : prev.score, 
+      score: (lvl === 1 || lvl === 12 || lvl === 13) ? 0 : prev.score, 
       isGameOver: false, 
       isWin: false, 
       isLevelCleared: false,
@@ -433,6 +443,20 @@ export const Game: React.FC = () => {
       view: 'playing'
     }));
   }, [dimensions, deviceType, getPaddleY, gameState.speedMultiplier, playClickSound]);
+
+  const handleValidatePassword = () => {
+    const targetPassword = activeSpecialModal === 'ogra' ? OGRA_PASSWORD : NATITA_PASSWORD;
+    const targetLevel = activeSpecialModal === 'ogra' ? 12 : 13;
+    
+    if (passwordInput === targetPassword) {
+      setActiveSpecialModal(null);
+      setPasswordInput("");
+      setPasswordError("");
+      initGame(targetLevel);
+    } else {
+      setPasswordError("Código inválido");
+    }
+  };
 
   const setView = useCallback((view: GameView) => {
     playClickSound();
@@ -480,7 +504,6 @@ export const Game: React.FC = () => {
 
   const update = useCallback(() => {
     const time = Date.now() * 0.001;
-    // Sincronización del movimiento flotante para el frame actual
     const floatX = (gameState.level >= 1 && gameState.level <= 10) ? Math.sin(time) * 15 : 0;
     floatXRef.current = floatX;
 
@@ -503,7 +526,6 @@ export const Game: React.FC = () => {
     const currentSpeed = BALL_SPEED * gameState.speedMultiplier;
     const currentPixelSize = getDynamicPixelSize(grid[0]?.length || 1);
 
-    // Limpieza de partículas acelerada para evitar estelas "fantasmales" que parezcan bloques
     particlesRef.current = particlesRef.current.filter(p => {
       p.x += p.vx; p.y += p.vy;
       p.life -= 0.03; 
@@ -652,7 +674,6 @@ export const Game: React.FC = () => {
       const charWidth = (grid[0]?.length || 0) * currentPixelSize;
       const charHeight = (grid?.length || 0) * currentPixelSize;
       if (charWidth > 0) {
-        // Uso de la referencia sincronizada floatXRef
         const charX = (dimensions.width - charWidth) / 2 + floatXRef.current;
         const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
         
@@ -695,19 +716,14 @@ export const Game: React.FC = () => {
                 playSound('wall');
                 collisionProcessed = true;
               } else if (pVal > 0) {
-                // BLOQUEO DE ESCRITURA ESTRICTO: Solo se permite destruir (transición a EMPTY)
-                // Se verifica explícitamente que el valor sea mayor a 0 para proceder.
                 if (grid[gyInt][gxInt] !== PixelType.EMPTY) {
                   grid[gyInt][gxInt] = PixelType.EMPTY;
                 }
-                
-                // Resolución de colisión AABB mejorada para rebote lateral y vertical
                 const overlapX = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffX);
                 const overlapY = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffY);
                 
                 if (overlapX < overlapY) {
                   ball.dx = Math.sign(pDiffX) * Math.abs(ball.dx);
-                  // Corrección de posición para evitar que la pelota entre en el área del bloque destruido
                   ball.x = pixelCenterX + Math.sign(pDiffX) * (currentPixelSize / 2 + ball.radius + 0.1);
                 } else {
                   ball.dy = Math.sign(pDiffY) * Math.abs(ball.dy);
@@ -754,7 +770,12 @@ export const Game: React.FC = () => {
         (gameState.level >= 4 && (enemy.isLargest || enemy.id === 'enemy-4' || enemy.id === 'enemy-3'));
 
       if (isFiringEnemy) {
-        if ((enemy.fireCooldown || 0) <= 0 && ballsRef.current.length >= 2) {
+        const overrideFire = 
+          ((gameState.level === 8 || gameState.level === 9) && enemy.isLargest) || 
+          (gameState.level === 10 && (enemy.isLargest || index === 4));
+          
+        const canFire = ballsRef.current.length >= 2 || overrideFire;
+        if ((enemy.fireCooldown || 0) <= 0 && canFire) {
           projectilesRef.current.push({
             id: Date.now() + Math.random(),
             x: enemy.x + enemy.width / 2 - 7,
@@ -775,7 +796,7 @@ export const Game: React.FC = () => {
     const isFigureCleared = pixelsRemaining === 0;
     
     if (isFigureCleared) {
-      const isFinalLevel = gameState.level === 11;
+      const isFinalLevel = gameState.level === 11 || gameState.level === 12 || gameState.level === 13;
       const alreadyCompleted = gameState.completedLevels.includes(gameState.level);
       const nextLevels = alreadyCompleted ? gameState.completedLevels : [...gameState.completedLevels, gameState.level];
       localStorage.setItem(COMPLETED_LEVELS_KEY, JSON.stringify(nextLevels));
@@ -870,7 +891,7 @@ export const Game: React.FC = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    if (gameState.view === 'playing' && gameState.level <= 11) {
+    if (gameState.view === 'playing' && (gameState.level <= 11 || gameState.level === 12 || gameState.level === 13)) {
       drawDynamicBackground(ctx, dimensions.width, dimensions.height, gameState.level);
     } else {
       ctx.fillStyle = COLORS.BG;
@@ -962,7 +983,6 @@ export const Game: React.FC = () => {
       const currentPixelSize = getDynamicPixelSize(grid[0].length);
       const charWidth = grid[0].length * currentPixelSize;
       const charHeight = grid.length * currentPixelSize;
-      // Uso de la referencia floatXRef sincronizada con el update
       const charX = (dimensions.width - charWidth) / 2 + floatXRef.current;
       const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
       for (let y = 0; y < grid.length; y++) {
@@ -987,6 +1007,7 @@ export const Game: React.FC = () => {
             case PixelType.OGRE_FACE_LIGHT: ctx.fillStyle = COLORS.OGRE_FACE_LIGHT; break;
             case PixelType.OGRE_TEETH: ctx.fillStyle = COLORS.OGRE_TEETH; break;
             case PixelType.OGRE_SPOT: ctx.fillStyle = COLORS.OGRE_SPOT; break;
+            case PixelType.RAT_PINK: ctx.fillStyle = COLORS.RAT_PINK; break;
           }
           ctx.fillRect(charX + x * currentPixelSize, charY + y * currentPixelSize, currentPixelSize, currentPixelSize);
         }
@@ -1057,6 +1078,11 @@ export const Game: React.FC = () => {
           83% { border-color: #8800ff; }
           100% { border-color: #ff0000; }
         }
+        @keyframes golden-glow {
+          0% { box-shadow: 0 0 2px #ffd700; }
+          50% { box-shadow: 0 0 6px #ffd700, 0 0 9px #ffd700; }
+          100% { box-shadow: 0 0 2px #ffd700; }
+        }
       `}</style>
       <div className="z-10 w-full p-4 flex flex-col items-center bg-green-950/70 backdrop-blur-md border-b-4 border-green-900">
         <h1 className="text-sm md:text-lg lg:text-2xl font-bold mb-2 tracking-widest text-center drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" style={{ color: '#a3e635' }}>EL OGRO BUCHON</h1>
@@ -1100,14 +1126,79 @@ export const Game: React.FC = () => {
             <h2 className="text-lg md:text-2xl mb-6 text-yellow-400 uppercase tracking-widest drop-shadow-[2px_2px_0px_rgba(0,0,0,1)] flex-shrink-0">SELECCIONAR NIVEL</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl px-4 pb-12">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((l) => {
-                const requiredLevels = [1,2,3,4,5,6,7,8,9,10];
+                const requiredLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
                 const isLvl11Locked = l === 11 && !requiredLevels.every(lvl => gameState.completedLevels.includes(lvl));
                 return (<button key={l} disabled={isLvl11Locked} onClick={() => initGame(l)} style={getLevelButtonStyle(l)} className={`group flex flex-col items-center p-6 transition-all rounded-none shadow-[4px_4px_0px_rgba(0,0,0,0.5)] ${isLvl11Locked ? 'cursor-not-allowed opacity-80' : 'hover:scale-105 active:scale-95'}`}><span className="text-[10px] md:text-xs mb-2 text-[#FFFFFF] font-bold">{`NIVEL ${l}`}</span><span className="text-[8px] uppercase tracking-tight" style={{ color: '#a3e635' }}>{l === 1 ? 'EL CHALÁN 🧹' : l === 2 ? 'RECIÉN LLEGADO 🎒' : l === 3 ? 'EL PLEBE 🧢' : l === 4 ? 'SOCIO DEL PANTANO 🤝' : l === 5 ? 'MANO DERECHA 🤜' : l === 6 ? 'EL MERO MERO 🤠' : l === 7 ? 'EL PATRÓN 👔' : l === 8 ? 'JEFE DE JEFES 🐯' : l === 9 ? 'EL CAPO MAYOR 🧿' : l === 10 ? 'LEYENDA VIVIENTE 👑' : isLvl11Locked ? '🔒 MODO BELICÓN BLOQUEADO' : '🔥 MODO BELICÓN ACTIVADO'}</span></button>);
               })}
+              {/* Special Level 12 Button (Ogra) */}
+              <button 
+                onClick={() => setActiveSpecialModal('ogra')}
+                style={{ border: '4px solid #ffd700', animation: 'golden-glow 2s infinite', backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+                className="group flex flex-col items-center p-6 transition-all rounded-none shadow-[4px_4px_0px_rgba(255,215,0,0.3)] hover:scale-105 active:scale-95"
+              >
+                <span className="text-[10px] md:text-xs mb-2 text-yellow-400 font-bold">NIVEL ESPECIAL</span>
+                <span className="text-[8px] uppercase tracking-tight text-white">RESCATA A LA OGRA 👸</span>
+              </button>
+              {/* Special Level 13 Button (Natita) */}
+              <button 
+                onClick={() => setActiveSpecialModal('natita')}
+                style={{ border: '4px solid #ffd700', animation: 'golden-glow 2s infinite', backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+                className="group flex flex-col items-center p-6 transition-all rounded-none shadow-[4px_4px_0px_rgba(255,215,0,0.3)] hover:scale-105 active:scale-95"
+              >
+                <span className="text-[10px] md:text-xs mb-2 text-yellow-400 font-bold">NIVEL ESPECIAL</span>
+                <span className="text-[8px] uppercase tracking-tight text-white">RESCATA AL NATITA 👦</span>
+              </button>
             </div>
             <button onClick={() => setView('start')} className="mt-6 mb-2 text-lime-600 hover:text-white text-[8px] md:text-[10px] uppercase underline underline-offset-4 flex-shrink-0">VOLVER AL INICIO</button>
           </div>
         )}
+
+        {/* Password Modal */}
+        {activeSpecialModal && (
+          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50 p-4">
+            <div className="bg-green-950 border-4 border-yellow-500 p-8 max-w-sm w-full flex flex-col items-center shadow-[0_0_50px_rgba(255,215,0,0.4)]">
+              <h2 className="text-sm md:text-base text-yellow-400 mb-6 text-center">INGRESA EL CÓDIGO SECRETO</h2>
+              <input 
+                type="text" 
+                value={passwordInput}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value.toUpperCase());
+                  setPasswordError("");
+                }}
+                className="w-full bg-black border-2 border-green-700 p-3 text-center text-xs mb-2 text-lime-400 focus:outline-none focus:border-yellow-500 transition-colors uppercase"
+                placeholder="CÓDIGO"
+              />
+              {passwordError && <p className="text-red-500 text-[8px] mb-4 uppercase">{passwordError}</p>}
+              <div className="flex flex-col gap-3 w-full mt-4">
+                <button 
+                  onClick={handleValidatePassword}
+                  className="bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 text-[10px] font-bold border-4 border-[#FFFF00] rounded-none transition-all active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center"
+                >
+                  VALIDAR
+                </button>
+                <a 
+                  href={activeSpecialModal === 'ogra' ? "https://ko-fi.com/s/bd26f06f93" : "https://ko-fi.com/s/9aab01ec2a"} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-[8px] font-bold border-4 border-[#00FFFF] rounded-none transition-all active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] text-center flex items-center justify-center gap-2"
+                >
+                  CONSIGUE EL CÓDIGO AQUÍ ☕
+                </a>
+                <button 
+                  onClick={() => {
+                    setActiveSpecialModal(null);
+                    setPasswordInput("");
+                    setPasswordError("");
+                  }}
+                  className="text-gray-400 hover:text-white text-[8px] uppercase mt-2 underline"
+                >
+                  CANCELAR
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {gameState.isPaused && gameState.view === 'playing' && (
           <div className="absolute inset-0 bg-green-950/70 flex flex-col items-center justify-center z-20">
             <h2 className="text-2xl md:text-4xl mb-8 text-yellow-400 animate-pulse tracking-widest drop-shadow-[3px_3px_0px_rgba(0,0,0,1)]">PAUSA</h2>
@@ -1132,12 +1223,14 @@ export const Game: React.FC = () => {
             <h2 className="text-xl md:text-2xl mb-4 text-lime-400 uppercase tracking-widest">¡NIVEL SUPERADO!</h2>
             <p className="text-[10px] md:text-xs mb-8 text-gray-300">ADÉNTRATE MÁS EN EL PANTANO...</p>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4">
-              <button
-                onClick={() => initGame(gameState.level + 1)}
-                className="bg-green-950 hover:bg-green-900 text-white px-8 py-4 text-xs md:text-sm font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                IR AL NIVEL {gameState.level + 1} ➡️
-              </button>
+              {gameState.level < 10 && (
+                <button
+                  onClick={() => initGame(gameState.level + 1)}
+                  className="bg-green-950 hover:bg-green-900 text-white px-8 py-4 text-xs md:text-sm font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  IR AL NIVEL {gameState.level + 1} ➡️
+                </button>
+              )}
               <button
                 onClick={() => setView('levelSelect')}
                 className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 text-xs md:text-sm font-bold transition-all border-4 border-[#a3e635] rounded-none active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
@@ -1149,7 +1242,7 @@ export const Game: React.FC = () => {
         )}
         {(gameState.isGameOver || gameState.isWin) && (
           <div className="absolute inset-0 bg-green-950/90 flex flex-col items-center justify-center z-30">
-            <h2 className={`text-xl md:text-2xl mb-4 ${gameState.isWin ? 'text-lime-400' : 'text-red-500'} uppercase tracking-widest text-center px-4 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]`}>{gameState.isWin ? '¡EL OGRO HA SIDO SACIADO! VICTORIA' : 'HAS SIDO EXPULSADO DEL PANTANO'}</h2>
+            <h2 className={`text-xl md:text-2xl mb-4 ${gameState.isWin ? 'text-lime-400' : 'text-red-500'} uppercase tracking-widest text-center px-4 drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]`}>{gameState.isWin ? (gameState.level === 12 ? '¡LA OGRA HA SIDO RESCATADA!' : gameState.level === 13 ? '¡EL NATITA HA SIDO RESCATADO!' : '¡EL OGRO HA SIDO SACIADO! VICTORIA') : 'HAS SIDO EXPULSADO DEL PANTANO'}</h2>
             <p className="text-xs md:text-sm mb-8 text-lime-200">PUNTAJE FINAL: {gameState.score}</p>
             <div className="flex flex-col gap-4 w-full max-w-xs px-4 items-stretch">
               <button
