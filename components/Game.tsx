@@ -15,6 +15,7 @@ import {
   LEVEL_9_DATA,
   LEVEL_10_DATA,
   LEVEL_12_DATA,
+  LEVEL_13_DATA,
   SPIDER_64_DATA,
   LABYRINTH_DATA,
   GHOST_DATA,
@@ -366,7 +367,9 @@ export const Game: React.FC = () => {
     particlesRef.current = [];
 
     let levelData = LEVEL_1_DATA;
-    if (lvl === 12 || lvl === 13) {
+    if (lvl === 13) {
+      levelData = LEVEL_13_DATA;
+    } else if (lvl === 12) {
       levelData = LEVEL_12_DATA;
     } else if (lvl === 11) {
       levelData = SHREK_FACE_DATA;
@@ -449,11 +452,13 @@ export const Game: React.FC = () => {
     const targetLevel = activeSpecialModal === 'ogra' ? 12 : 13;
     
     if (passwordInput === targetPassword) {
+      playSound('spawn');
       setActiveSpecialModal(null);
       setPasswordInput("");
       setPasswordError("");
       initGame(targetLevel);
     } else {
+      playSound('hit');
       setPasswordError("Código inválido");
     }
   };
@@ -572,171 +577,199 @@ export const Game: React.FC = () => {
     const newSpawnedBalls: Ball[] = [];
     const ballsToRemove: number[] = [];
 
+    // Physics Sub-stepping logic for levels 5-10
+    const subSteps = (gameState.level >= 5 && gameState.level <= 10) ? 4 : 1;
+    const MAX_VELOCITY = 20; // Emergency clamp
+
     for (let bIdx = 0; bIdx < activeBalls.length; bIdx++) {
       const ball = activeBalls[bIdx];
+      
+      // Clamp speeds for safety (emergency only)
+      ball.dx = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, ball.dx));
+      ball.dy = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, ball.dy));
+
       if (!trailRef.current[ball.id]) trailRef.current[ball.id] = [];
       trailRef.current[ball.id].push({ x: ball.x, y: ball.y, color: ball.color });
       if (trailRef.current[ball.id].length > 15) trailRef.current[ball.id].shift();
 
-      ball.x += ball.dx;
-      ball.y += ball.dy;
-
-      if (ball.x + ball.radius > dimensions.width) {
-        ball.dx = -Math.abs(ball.dx); ball.x = dimensions.width - ball.radius; playSound('wall');
-      } else if (ball.x - ball.radius < 0) {
-        ball.dx = Math.abs(ball.dx); ball.x = ball.radius; playSound('wall');
-      }
-      if (ball.y - ball.radius < 0) {
-        ball.dy = Math.abs(ball.dy); ball.y = ball.radius; playSound('wall');
-      }
-
-      if (ball.y + ball.radius > dimensions.height) {
-        ballsToRemove.push(ball.id);
-        continue;
-      }
-
-      if (
-        ball.y + ball.radius > paddle.y &&
-        ball.y - ball.radius < paddle.y + paddle.height &&
-        ball.x > paddle.x &&
-        ball.x < paddle.x + paddle.width &&
-        ball.dy > 0
-      ) {
-        const relativeX = ball.x - paddle.x;
-        const hittingHole = paddle.holes.some(h => relativeX >= h.x && relativeX <= h.x + h.width);
-
-        if (!hittingHole) {
-          ball.dy = -Math.abs(currentSpeed);
-          ball.y = paddle.y - ball.radius;
-          const hitPos = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
-          let newDx = hitPos * currentSpeed * 1.5;
-          if (Math.abs(newDx) < 0.8) newDx = (newDx >= 0 ? 0.8 : -0.8);
-          ball.dx = newDx;
-          ball.color = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
-          playSound('paddle');
-        }
-      }
-
-      let overlappedEnemyId: string | undefined = undefined;
-      for (const enemy of ghosts) {
-        if (enemy.isDead) continue;
-        if (
-          ball.x + ball.radius > enemy.x &&
-          ball.x - ball.radius < enemy.x + enemy.width &&
-          ball.y + ball.radius > enemy.y &&
-          ball.y - ball.radius < enemy.y + enemy.height
-        ) {
-          overlappedEnemyId = enemy.id;
-          if (enemy.health !== undefined) {
-            enemy.health -= 1;
-            if (enemy.health <= 0) {
-              enemy.isDead = true;
-              createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.isOgre ? COLORS.OGRE_GREEN : COLORS.GHOST_BLUE);
-              setGameState(prev => ({ ...prev, score: prev.score + 1000 }));
-            }
-          }
-          if (enemy.isSmallest && ball.lastSpawnId !== enemy.id) {
-            if (activeBalls.length + newSpawnedBalls.length < MAX_BALLS) {
-              newSpawnedBalls.push({
-                id: Date.now() + Math.random(),
-                x: ball.x,
-                y: ball.y,
-                dx: (Math.random() - 0.5) * currentSpeed * 2,
-                dy: -Math.abs(currentSpeed),
-                radius: BALL_RADIUS,
-                color: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
-                lastSpawnId: enemy.id
-              });
-              playSound('spawn');
-            }
-          }
-          ball.lastSpawnId = enemy.id;
-          enemy.isHit = !enemy.isHit; 
-          if (enemy.isHit) setGameState(prev => ({ ...prev, score: prev.score + 50 }));
-          playSound('ghost');
-          const centerX = enemy.x + enemy.width / 2;
-          const centerY = enemy.y + enemy.height / 2;
-          const dx = ball.x - centerX;
-          const dy = ball.y - centerY;
-          if (Math.abs(dx) / enemy.width > Math.abs(dy) / enemy.height) {
-            ball.dx = Math.sign(dx) * currentSpeed;
-            ball.dy = ((ball.y - centerY) / (enemy.height / 2)) * currentSpeed * 0.8;
-          } else {
-            ball.dy = Math.sign(dy) * currentSpeed;
-            ball.dx = ((ball.x - centerX) / (enemy.width / 2)) * currentSpeed * 1.2;
-          }
-          ball.x += ball.dx; ball.y += ball.dy;
-          break; 
-        }
-      }
-      if (!overlappedEnemyId) ball.lastSpawnId = undefined;
-
-      const charWidth = (grid[0]?.length || 0) * currentPixelSize;
-      const charHeight = (grid?.length || 0) * currentPixelSize;
-      if (charWidth > 0) {
-        const charX = (dimensions.width - charWidth) / 2 + floatXRef.current;
-        const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
+      for (let step = 0; step < subSteps; step++) {
+        let collisionStep = false;
         
-        const checkPoints = [
-          { x: ball.x, y: ball.y },
-          { x: ball.x - ball.radius, y: ball.y },
-          { x: ball.x + ball.radius, y: ball.y },
-          { x: ball.x, y: ball.y - ball.radius },
-          { x: ball.x, y: ball.y + ball.radius }
-        ];
+        // Move fractional amount per step
+        ball.x += ball.dx / subSteps;
+        ball.y += ball.dy / subSteps;
 
-        let collisionProcessed = false;
-        for (const pt of checkPoints) {
-          if (collisionProcessed) break;
-          const gxInt = Math.floor((pt.x - charX) / currentPixelSize);
-          const gyInt = Math.floor((pt.y - charY) / currentPixelSize);
+        // Wall collisions
+        if (ball.x + ball.radius > dimensions.width) {
+          ball.dx = -Math.abs(ball.dx); ball.x = dimensions.width - ball.radius; playSound('wall');
+          collisionStep = true;
+        } else if (ball.x - ball.radius < 0) {
+          ball.dx = Math.abs(ball.dx); ball.x = ball.radius; playSound('wall');
+          collisionStep = true;
+        }
+        if (ball.y - ball.radius < 0) {
+          ball.dy = Math.abs(ball.dy); ball.y = ball.radius; playSound('wall');
+          collisionStep = true;
+        }
 
-          if (gyInt >= 0 && gyInt < grid.length) {
-            const row = grid[gyInt];
-            if (gxInt >= 0 && gxInt < row.length) {
-              const pVal = row[gxInt];
-              if (pVal === undefined || pVal === PixelType.EMPTY) continue;
+        if (ball.y + ball.radius > dimensions.height) {
+          ballsToRemove.push(ball.id);
+          collisionStep = true;
+          break; // Stop steps if ball out of bounds
+        }
 
-              const pixelCenterX = charX + gxInt * currentPixelSize + currentPixelSize / 2;
-              const pixelCenterY = charY + gyInt * currentPixelSize + currentPixelSize / 2;
-              const pDiffX = ball.x - pixelCenterX;
-              const pDiffY = ball.y - pixelCenterY;
+        // Paddle collision
+        if (
+          ball.y + ball.radius > paddle.y &&
+          ball.y - ball.radius < paddle.y + paddle.height &&
+          ball.x > paddle.x &&
+          ball.x < paddle.x + paddle.width &&
+          ball.dy > 0
+        ) {
+          const relativeX = ball.x - paddle.x;
+          const hittingHole = paddle.holes.some(h => relativeX >= h.x && relativeX <= h.x + h.width);
 
-              if (pVal === PixelType.METAL) {
-                const overlapX = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffX);
-                const overlapY = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffY);
-                
-                if (overlapX < overlapY) {
-                  ball.dx = Math.sign(pDiffX) * Math.abs(ball.dx);
-                  ball.x = pixelCenterX + Math.sign(pDiffX) * (currentPixelSize / 2 + ball.radius + 0.5);
-                } else {
-                  ball.dy = Math.sign(pDiffY) * Math.abs(ball.dy);
-                  ball.y = pixelCenterY + Math.sign(pDiffY) * (currentPixelSize / 2 + ball.radius + 0.5);
+          if (!hittingHole) {
+            ball.dy = -Math.abs(currentSpeed);
+            ball.y = paddle.y - ball.radius;
+            const hitPos = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+            let newDx = hitPos * currentSpeed * 1.5;
+            if (Math.abs(newDx) < 0.8) newDx = (newDx >= 0 ? 0.8 : -0.8);
+            ball.dx = newDx;
+            ball.color = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
+            playSound('paddle');
+            collisionStep = true;
+          }
+        }
+
+        // Ghost collision
+        let overlappedEnemyId: string | undefined = undefined;
+        for (const enemy of ghosts) {
+          if (enemy.isDead) continue;
+          if (
+            ball.x + ball.radius > enemy.x &&
+            ball.x - ball.radius < enemy.x + enemy.width &&
+            ball.y + ball.radius > enemy.y &&
+            ball.y - ball.radius < enemy.y + enemy.height
+          ) {
+            overlappedEnemyId = enemy.id;
+            if (enemy.health !== undefined) {
+              enemy.health -= 1;
+              if (enemy.health <= 0) {
+                enemy.isDead = true;
+                createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.isOgre ? COLORS.OGRE_GREEN : COLORS.GHOST_BLUE);
+                setGameState(prev => ({ ...prev, score: prev.score + 1000 }));
+              }
+            }
+            if (enemy.isSmallest && ball.lastSpawnId !== enemy.id) {
+              if (activeBalls.length + newSpawnedBalls.length < MAX_BALLS) {
+                newSpawnedBalls.push({
+                  id: Date.now() + Math.random(),
+                  x: ball.x,
+                  y: ball.y,
+                  dx: (Math.random() - 0.5) * currentSpeed * 2,
+                  dy: -Math.abs(currentSpeed),
+                  radius: BALL_RADIUS,
+                  color: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
+                  lastSpawnId: enemy.id
+                });
+                playSound('spawn');
+              }
+            }
+            ball.lastSpawnId = enemy.id;
+            enemy.isHit = !enemy.isHit; 
+            if (enemy.isHit) setGameState(prev => ({ ...prev, score: prev.score + 50 }));
+            playSound('ghost');
+            const centerX = enemy.x + enemy.width / 2;
+            const centerY = enemy.y + enemy.height / 2;
+            const dx = ball.x - centerX;
+            const dy = ball.y - centerY;
+            if (Math.abs(dx) / enemy.width > Math.abs(dy) / enemy.height) {
+              ball.dx = Math.sign(dx) * currentSpeed;
+              ball.dy = ((ball.y - centerY) / (enemy.height / 2)) * currentSpeed * 0.8;
+            } else {
+              ball.dy = Math.sign(dy) * currentSpeed;
+              ball.dx = ((ball.x - centerX) / (enemy.width / 2)) * currentSpeed * 1.2;
+            }
+            ball.x += ball.dx / subSteps; // Small push back
+            collisionStep = true;
+            break; 
+          }
+        }
+        if (!overlappedEnemyId) ball.lastSpawnId = undefined;
+
+        // Grid collision (Bricks/Obstacles)
+        const charWidth = (grid[0]?.length || 0) * currentPixelSize;
+        const charHeight = (grid?.length || 0) * currentPixelSize;
+        if (charWidth > 0) {
+          const charX = (dimensions.width - charWidth) / 2 + floatXRef.current;
+          const charY = Math.max(40, (dimensions.height * 0.4) - (charHeight / 2));
+          
+          const checkPoints = [
+            { x: ball.x, y: ball.y },
+            { x: ball.x - ball.radius, y: ball.y },
+            { x: ball.x + ball.radius, y: ball.y },
+            { x: ball.x, y: ball.y - ball.radius },
+            { x: ball.x, y: ball.y + ball.radius }
+          ];
+
+          let gridCollisionProcessed = false;
+          for (const pt of checkPoints) {
+            if (gridCollisionProcessed) break;
+            const gxInt = Math.floor((pt.x - charX) / currentPixelSize);
+            const gyInt = Math.floor((pt.y - charY) / currentPixelSize);
+
+            if (gyInt >= 0 && gyInt < grid.length) {
+              const row = grid[gyInt];
+              if (gxInt >= 0 && gxInt < row.length) {
+                const pVal = row[gxInt];
+                if (pVal === undefined || pVal === PixelType.EMPTY) continue;
+
+                const pixelCenterX = charX + gxInt * currentPixelSize + currentPixelSize / 2;
+                const pixelCenterY = charY + gyInt * currentPixelSize + currentPixelSize / 2;
+                const pDiffX = ball.x - pixelCenterX;
+                const pDiffY = ball.y - pixelCenterY;
+
+                if (pVal === PixelType.METAL) {
+                  const overlapX = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffX);
+                  const overlapY = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffY);
+                  
+                  if (overlapX < overlapY) {
+                    ball.dx = Math.sign(pDiffX) * Math.abs(ball.dx);
+                    ball.x = pixelCenterX + Math.sign(pDiffX) * (currentPixelSize / 2 + ball.radius + 0.5);
+                  } else {
+                    ball.dy = Math.sign(pDiffY) * Math.abs(ball.dy);
+                    ball.y = pixelCenterY + Math.sign(pDiffY) * (currentPixelSize / 2 + ball.radius + 0.5);
+                  }
+                  playSound('wall');
+                  gridCollisionProcessed = true;
+                  collisionStep = true;
+                } else if (pVal > 0) {
+                  if (grid[gyInt][gxInt] !== PixelType.EMPTY) {
+                    grid[gyInt][gxInt] = PixelType.EMPTY;
+                  }
+                  const overlapX = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffX);
+                  const overlapY = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffY);
+                  
+                  if (overlapX < overlapY) {
+                    ball.dx = Math.sign(pDiffX) * Math.abs(ball.dx);
+                    ball.x = pixelCenterX + Math.sign(pDiffX) * (currentPixelSize / 2 + ball.radius + 0.1);
+                  } else {
+                    ball.dy = Math.sign(pDiffY) * Math.abs(ball.dy);
+                    ball.y = pixelCenterY + Math.sign(pDiffY) * (currentPixelSize / 2 + ball.radius + 0.1);
+                  }
+                  
+                  setGameState(prev => ({ ...prev, score: prev.score + 10 }));
+                  playSound('hit');
+                  gridCollisionProcessed = true;
+                  collisionStep = true;
                 }
-                playSound('wall');
-                collisionProcessed = true;
-              } else if (pVal > 0) {
-                if (grid[gyInt][gxInt] !== PixelType.EMPTY) {
-                  grid[gyInt][gxInt] = PixelType.EMPTY;
-                }
-                const overlapX = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffX);
-                const overlapY = (currentPixelSize / 2 + ball.radius) - Math.abs(pDiffY);
-                
-                if (overlapX < overlapY) {
-                  ball.dx = Math.sign(pDiffX) * Math.abs(ball.dx);
-                  ball.x = pixelCenterX + Math.sign(pDiffX) * (currentPixelSize / 2 + ball.radius + 0.1);
-                } else {
-                  ball.dy = Math.sign(pDiffY) * Math.abs(ball.dy);
-                  ball.y = pixelCenterY + Math.sign(pDiffY) * (currentPixelSize / 2 + ball.radius + 0.1);
-                }
-                
-                setGameState(prev => ({ ...prev, score: prev.score + 10 }));
-                playSound('hit');
-                collisionProcessed = true;
               }
             }
           }
         }
+        
+        if (collisionStep) break;
       }
     }
 
@@ -1008,6 +1041,7 @@ export const Game: React.FC = () => {
             case PixelType.OGRE_TEETH: ctx.fillStyle = COLORS.OGRE_TEETH; break;
             case PixelType.OGRE_SPOT: ctx.fillStyle = COLORS.OGRE_SPOT; break;
             case PixelType.RAT_PINK: ctx.fillStyle = COLORS.RAT_PINK; break;
+            case PixelType.TOAD_EYE: ctx.fillStyle = "#FFFF00"; break; // Crown Yellow
           }
           ctx.fillRect(charX + x * currentPixelSize, charY + y * currentPixelSize, currentPixelSize, currentPixelSize);
         }
@@ -1132,7 +1166,7 @@ export const Game: React.FC = () => {
               })}
               {/* Special Level 12 Button (Ogra) */}
               <button 
-                onClick={() => setActiveSpecialModal('ogra')}
+                onClick={() => { playSound('select'); setActiveSpecialModal('ogra'); }}
                 style={{ border: '4px solid #ffd700', animation: 'golden-glow 2s infinite', backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
                 className="group flex flex-col items-center p-6 transition-all rounded-none shadow-[4px_4px_0px_rgba(255,215,0,0.3)] hover:scale-105 active:scale-95"
               >
@@ -1141,7 +1175,7 @@ export const Game: React.FC = () => {
               </button>
               {/* Special Level 13 Button (Natita) */}
               <button 
-                onClick={() => setActiveSpecialModal('natita')}
+                onClick={() => { playSound('select'); setActiveSpecialModal('natita'); }}
                 style={{ border: '4px solid #ffd700', animation: 'golden-glow 2s infinite', backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
                 className="group flex flex-col items-center p-6 transition-all rounded-none shadow-[4px_4px_0px_rgba(255,215,0,0.3)] hover:scale-105 active:scale-95"
               >
@@ -1177,6 +1211,7 @@ export const Game: React.FC = () => {
                   VALIDAR
                 </button>
                 <a 
+                  onClick={() => playSound('select')}
                   href={activeSpecialModal === 'ogra' ? "https://ko-fi.com/s/bd26f06f93" : "https://ko-fi.com/s/9aab01ec2a"} 
                   target="_blank" 
                   rel="noopener noreferrer"
@@ -1186,6 +1221,7 @@ export const Game: React.FC = () => {
                 </a>
                 <button 
                   onClick={() => {
+                    playSound('select');
                     setActiveSpecialModal(null);
                     setPasswordInput("");
                     setPasswordError("");

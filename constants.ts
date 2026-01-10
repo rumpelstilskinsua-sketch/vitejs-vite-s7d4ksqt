@@ -41,12 +41,12 @@ export const LEVEL_1_DATA: number[][] = [
   [0,0,0,0,0,0,0,5,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0],
   [0,0,0,0,0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0],
   [0,0,0,0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,0,0,0,0,0,0,0],
-  [0,0,0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,0,0,0,0,0,0],
+  [0,0,0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,0,0,0,0,0,0,0],
   [0,0,0,3,1,1,1,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,3,0,0,0,0,0],
   [0,0,0,3,1,1,1,1,1,1,1,1,5,3,2,2,2,2,2,2,2,2,3,5,1,1,1,1,1,1,1,1,1,1,3,0,0,0,0,0],
   [0,0,3,1,1,1,1,1,1,1,1,3,2,2,0,0,0,0,0,0,0,0,2,2,3,1,1,1,1,1,1,1,1,1,1,3,0,0,0,0],
-  [0,0,3,1,1,1,1,1,1,1,3,2,0,0,0,0,0,0,0,0,0,0,0,0,2,3,1,1,1,1,1,1,1,1,1,3,0,0,0,0],
-  [0,0,3,1,1,1,1,1,1,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,1,1,1,1,1,1,1,1,3,0,0,0,0],
+  [0,0,3,1,1,1,1,1,1,1,1,3,2,0,0,0,0,0,0,0,0,0,0,0,0,2,3,1,1,1,1,1,1,1,1,1,3,0,0,0],
+  [0,0,3,1,1,1,1,1,1,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,1,1,1,1,1,1,1,1,3,0,0,0],
   [0,3,1,1,1,1,1,1,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,1,1,1,1,1,1,1,1,3,0,0,0],
   [0,3,1,1,1,1,1,1,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,1,1,1,1,1,1,1,1,3,0,0,0],
   [0,3,1,1,1,1,1,1,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,1,1,1,1,1,1,1,1,3,0,0,0],
@@ -76,7 +76,7 @@ export const LEVEL_1_DATA: number[][] = [
   [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 ];
 
-// Nivel 2: Letra G de Lodo (Normalizado a 40x40)
+// Nivel 2: Letra G de Lodo
 export const LEVEL_2_DATA: number[][] = [
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -97,12 +97,12 @@ export const LEVEL_2_DATA: number[][] = [
 [0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0,0,0,0,0],
-[0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,1,1,1,1,1,1,1,1,1,3,3,5,0,0,0,0,0,0],
+[0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,1,1,1,1,1,1,1,1,1,3,3,5,0,0,0,0,0],
 [0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,3,5,0,0,0,0,0],
 [0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,3,1,1,1,1,3,3,3,3,3,3,1,1,1,1,3,5,0,0,0,0,0],
-[0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,3,3,1,1,1,3,3,0,0,0,3,3,3,1,1,1,3,5,0,0,0,0,0],
-[0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,3,1,1,1,3,3,0,0,0,0,3,3,3,1,1,1,3,5,0,0,0,0,0],
-[0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,3,1,1,1,3,0,0,0,0,0,0,0,3,1,1,1,3,5,0,0,0,0,0],
+[0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,3,3,1,1,1,3,3,0,0,0,3,3,3,1,1,1,3,5,0,0,0,0,0],
+[0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,3,1,1,1,3,3,0,0,0,0,3,3,3,1,1,1,3,5,0,0,0,0,0],
+[0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,3,1,1,1,3,0,0,0,0,0,0,0,3,1,1,1,3,5,0,0,0,0,0],
 [0,3,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,3,1,1,1,3,5,0,0,0,0,0],
 [0,0,3,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1,1,3,3,5,0,0,0,0,0],
 [0,0,3,3,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,1,1,3,5,0,0,0,0,0],
@@ -120,7 +120,7 @@ export const LEVEL_2_DATA: number[][] = [
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 ];
 
-// Nivel 3: Letra R de Lodo (Normalizado a 40x40)
+// Nivel 3: Letra R de Lodo
 export const LEVEL_3_DATA: number[][] = [
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -140,8 +140,8 @@ export const LEVEL_3_DATA: number[][] = [
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,3,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,3,3,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0],
-[0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0],
-[0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+[0,0,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,3,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,3,1,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,3,3,1,1,1,1,1,1,3,3,0,0,0,0,0,0,0,0,0,0,0],
@@ -164,174 +164,134 @@ export const LEVEL_3_DATA: number[][] = [
 [0,0,0,0,0,0,0,0,0,5,5,5,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 ];
 
-// Nivel 5: Laberinto Buchón (Fondo Verde Pantano con línea Neón pegada al metal y una 'B' negra)
+// Nivel 5: Laberinto Buchón
 export const LEVEL_5_DATA: number[][] = Array(40).fill(0).map((_, y) => 
   Array(40).fill(0).map((_, x) => {
     const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
     const isTopEntrance = y <= 2 && x >= 17 && x <= 22;
     const isBottomEntrance = y >= 37 && x >= 17 && x <= 22;
-    
     if (isBorder) {
       if (isTopEntrance || isBottomEntrance) return 0;
       return PixelType.METAL;
     }
-    
-    // Línea Neón pegada al gris metálico
     const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
     if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
-
-    // Lógica para trazar una 'B' mayúscula con contorno negro (PixelType.WIZARD_BLACK)
     const isBStem = (x >= 10 && x <= 12) && (y >= 8 && y <= 31);
     const isBTopBar = (y >= 8 && y <= 10) && (x >= 12 && x <= 25);
     const isBMidBar = (y >= 19 && y <= 21) && (x >= 12 && x <= 25);
     const isBBotBar = (y >= 29 && y <= 31) && (x >= 12 && x <= 25);
     const isBTopCurve = (x >= 25 && x <= 27) && (y >= 10 && y <= 19);
     const isBBotCurve = (x >= 25 && x <= 27) && (y >= 21 && y <= 29);
-
     if (isBStem || isBTopBar || isBMidBar || isBBotBar || isBTopCurve || isBBotCurve) {
       return PixelType.WIZARD_BLACK;
     }
-
-    // Fondo Verde Pantano
     return PixelType.WIZARD_CLOAK;
   })
 );
 
-// Nivel 6: Laberinto Buchón II (U con contorno negro, entrada abajo cerrada)
+// Nivel 6: Laberinto Buchón II
 export const LEVEL_6_DATA: number[][] = Array(40).fill(0).map((_, y) => 
   Array(40).fill(0).map((_, x) => {
     const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
     const isTopEntrance = y <= 2 && x >= 17 && x <= 22;
-    
     if (isBorder) {
       if (isTopEntrance) return 0;
       return PixelType.METAL;
     }
-    
     const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
     if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
-
     const isULeftStem = (x >= 10 && x <= 12) && (y >= 8 && y <= 29);
     const isURightStem = (x >= 25 && x <= 27) && (y >= 8 && y <= 29);
     const isUBottomBar = (y >= 29 && y <= 31) && (x >= 12 && x <= 25);
-
     if (isULeftStem || isURightStem || isUBottomBar) {
       return PixelType.WIZARD_BLACK;
     }
-
     return PixelType.WIZARD_CLOAK;
   })
 );
 
-// Nivel 7: Laberinto Buchón III (Letra C con contorno negro)
+// Nivel 7: Laberinto Buchón III
 export const LEVEL_7_DATA: number[][] = Array(40).fill(0).map((_, y) => 
   Array(40).fill(0).map((_, x) => {
     const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
-    // Apertura reducida al 50% (3 bloques en lugar de 6)
     const isTopEntrance = y <= 2 && x >= 19 && x <= 21;
-    
     if (isBorder) {
       if (isTopEntrance) return 0;
       return PixelType.METAL;
     }
-    
     const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
     if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
-
     const isCLeftStem = (x >= 10 && x <= 12) && (y >= 8 && y <= 31);
     const isCTopBar = (y >= 8 && y <= 10) && (x >= 12 && x <= 27);
     const isCBottomBar = (y >= 29 && y <= 31) && (x >= 12 && x <= 27);
-
     if (isCLeftStem || isCTopBar || isCBottomBar) {
       return PixelType.WIZARD_BLACK;
     }
-
     return PixelType.WIZARD_CLOAK;
   })
 );
 
-// Nivel 8: Laberinto Buchón IV (Figura de Nivel 7 pero con una H central con contorno negro)
+// Nivel 8: Laberinto Buchón IV
 export const LEVEL_8_DATA: number[][] = Array(40).fill(0).map((_, y) => 
   Array(40).fill(0).map((_, x) => {
     const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
-    // Apertura reducida al 50% (3 bloques en lugar de 6)
     const isTopEntrance = y <= 2 && x >= 19 && x <= 21;
-    
     if (isBorder) {
       if (isTopEntrance) return 0;
       return PixelType.METAL;
     }
-    
     const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
     if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
-
-    // Estructura de la H dentro del área de la figura del nivel 7
     const isHLeftStem = (x >= 10 && x <= 12) && (y >= 8 && y <= 31);
     const isHRightStem = (x >= 25 && x <= 27) && (y >= 8 && y <= 31);
     const isHMidBar = (y >= 19 && y <= 21) && (x >= 13 && x <= 24);
-
     if (isHLeftStem || isHRightStem || isHMidBar) {
       return PixelType.WIZARD_BLACK;
     }
-
     return PixelType.WIZARD_CLOAK;
   })
 );
 
-// Nivel 9: Laberinto Buchón V (Figura de Nivel 7 pero con una O central con contorno negro)
+// Nivel 9: Laberinto Buchón V
 export const LEVEL_9_DATA: number[][] = Array(40).fill(0).map((_, y) => 
   Array(40).fill(0).map((_, x) => {
     const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
-    // Apertura reducida al 50% (3 bloques en lugar de 6)
     const isTopEntrance = y <= 2 && x >= 19 && x <= 21;
-    
     if (isBorder) {
       if (isTopEntrance) return 0;
       return PixelType.METAL;
     }
-    
     const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
     if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
-
     const isOOuter = (x >= 10 && x <= 27) && (y >= 8 && y <= 31);
     const isOInner = (x >= 13 && x <= 24) && (y >= 11 && y <= 28);
-
     if (isOOuter && !isOInner) {
       return PixelType.WIZARD_BLACK;
     }
-
     return PixelType.WIZARD_CLOAK;
   })
 );
 
-// Nivel 10: Laberinto Buchón VI (Figura de Nivel 7 pero con una N central con contorno negro)
+// Nivel 10: Laberinto Buchón VI
 export const LEVEL_10_DATA: number[][] = Array(40).fill(0).map((_, y) => 
   Array(40).fill(0).map((_, x) => {
     const isBorder = y <= 2 || y >= 37 || x <= 2 || x >= 37;
-    // Apertura reducida al 50% (3 bloques en lugar de 6)
     const isTopEntrance = y <= 2 && x >= 19 && x <= 21;
-    
     if (isBorder) {
       if (isTopEntrance) return 0;
       return PixelType.METAL;
     }
-    
     const isNeonLine = (y === 3 || y === 36 || x === 3 || x === 36);
     if (isNeonLine) return PixelType.SPIDER_BODY_LIME;
-
     const isNLeftStem = (x >= 10 && x <= 12) && (y >= 8 && y <= 31);
     const isNRightStem = (x >= 25 && x <= 27) && (y >= 8 && y <= 31);
-    
-    // Diagonal para la N
     const diagWidth = 2;
     const normalizedY = (y - 8) / 23;
     const targetX = 12 + normalizedY * 13;
     const isNDiagonal = (x >= targetX - diagWidth && x <= targetX + diagWidth) && (y >= 8 && y <= 31);
-
     if (isNLeftStem || isNRightStem || isNDiagonal) {
       return PixelType.WIZARD_BLACK;
     }
-
     return PixelType.WIZARD_CLOAK;
   })
 );
@@ -357,15 +317,21 @@ const M = PixelType.OGRE_FACE_MAIN;
 const L = PixelType.OGRE_FACE_LIGHT; 
 const T = PixelType.OGRE_TEETH;
 const S = PixelType.OGRE_SPOT;
-const P = PixelType.RAT_PINK; // Color para moño y detalles femeninos
+const P = PixelType.RAT_PINK; 
+const B = PixelType.WIZARD_BROWN; 
+const C = PixelType.TOAD_EYE; 
+const G = PixelType.LAB_BLUE; 
+const W = PixelType.OGRE_TEETH; 
+const R = PixelType.RAT_EYE; 
+const H = PixelType.WIZARD_BROWN; // Uso WIZARD_BROWN para el cabello café
 
 export const SHREK_FACE_DATA: number[][] = [
   [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
   [_,_,_,_,_,_,_, _,_,_,_,_,_,_,O,O,M,M,M,M,M,M,M,M,O,O,_,_ ,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_, _ ,_,_,O,O,M,M,M,M,M,M,M,M,M,M,M,M,O,O,_,_,_,_,_,_,_,_,_,_ ,_],
-  [_,_,_,_,_,_ ,_ ,_ ,_, _,_,O,M,M,M,M,M,M,D,D,D,D,M,M,M,M,M,M,O,_,_ ,_,_ ,_ ,_ ,_],
+  [_,_,_,_,_,_,_,_,_, _ ,_,_,O,O,M,M,M,M,M,M,M,M,M,M,M,M,O,O,_,_ ,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_ ,_ ,_ ,_, _,_,O,M,M,M,M,M,M,D,D,D,D,M,M,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_ ,_],
   [_,_,_,_,_,_,_,_ ,_ ,_,O,M,M,M,D,D,D,D,M,M,M,M,D,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_ ,_],
-  [_,_,_,_,_,_ ,_ ,_ ,_,_,O,M,M,D,D,M,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_],
+  [_,_,_,_,_ ,_ ,_ ,_ ,_,_,O,M,M,D,D,M,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,O,_,_ ,_ ,_ ,_],
   [_,_,_,_,_,_ ,_ ,_,O,M,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_ ,_ ,_ ,_],
   [O,O,O,_,_,_,_,_,O,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_ ,_ ,_ ,O,O,O],
   [O,M,M,O,_,_ ,_ ,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_ ,_ ,O,M,M,O],
@@ -382,57 +348,100 @@ export const SHREK_FACE_DATA: number[][] = [
   [_,_,_,_,O,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,O,_,_],
   [_,_,_,_,O,M,M,M,M,M,M,D,O,O,O,O,O,O,O,O,O,O,O,O,O,D,M,M,M,M,M,M,M,O,_,_],
   [_,_,_,_,O,M,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,_,O,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,O,_,_],
-  [_,_,_,_,_,_,O,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,O,M,M,O,_,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,O,O,_,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_ ,_ ,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_ ,_ ,_],
-  [_,_,_,_,_,O,D,M,M,O,L,L,L,L,L,L,L,L,L,L,L,O,M,M,D,O,_,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,_,_ ,_ ,_],
-  [_,_,_,_,_,_ ,_ ,_ ,O,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_],
-  [_,_,_,_,_,_ ,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,_,_,O,D,D,M,M,M,M,M,M,M,M,D,D,O,_,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,_,_,_,O,O,D,D,D,D,D,D,D,D,O,O,_,_ ,_ ,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_ ,_ ,_ ,_]
+  [_,_ ,_ ,_,O,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,O,_,_],
+  [_,_ ,_ ,_,_,O,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,O,_,_],
+  [_,_ ,_ ,_ ,_,_,O,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,O,M,M,O,_,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,O,O,_,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_ ,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_,_,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_ ,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_,_,_],
+  [_,_ ,_ ,_ ,_ ,O,D,M,M,O,L,L,L,L,L,L,L,L,L,L,L,O,M,M,D,O,_,_,_,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_ ,_,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,_,_,_,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_ ,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_,_,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,O,D,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_,_,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_,O,D,D,M,M,M,M,M,M,M,M,D,D,O,_,_ ,_ ,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_,O,O,D,D,D,D,D,D,D,D,O,O,_,_ ,_ ,_],
+  [_,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_ ,_,O,O,O,O,O,O,O,O,_,_ ,_ ,_ ,_]
 ];
 
 export const LEVEL_12_DATA: number[][] = [
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,P,P,P,P,M,M,M,M,O,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,O,O,P,P,P,P,P,P,M,M,M,M,M,M,O,O,_,_,_,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,O,P,P,O,O,P,P,P,D,D,D,D,M,M,M,M,M,M,O,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,O,M,P,P,O,O,P,P,P,M,M,M,M,D,D,D,M,M,M,M,O,_,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,O,M,P,P,P,P,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,O,_,_,_,_,_,_,_,_],
-  [_,_,_,_,_,_,_,_,O,M,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_,_,_,_,_,_,_,_],
-  [O,O,O,_,_,_,_,_,O,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,O,_,_,_,_,O,O,O],
-  [O,M,M,O,_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_,_,O,M,M,O],
-  [O,M,M,M,O,O,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,O,O,M,M,M,O],
-  [_,O,M,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,M,M,O,_],
-  [_,_,O,M,M,M,M,M,M,O,M,M,M,M,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,M,M,O,_,_],
-  [_,_,_,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,D,D,D,D,D,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,M,D,D,M,M,M,M,M,D,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,M,M,D,O,O,O,O,O,O,O,O,O,O,O,O,O,D,M,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,O,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,M,O,_,_],
-  [_,_,_,_,_,O,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,O,_,_],
-  [_,_,_,_,_,_,O,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,O,M,M,O,_,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,O,O,_,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_,_,_],
-  [_,_,_,_,_,_,_,O,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,O,_,_,_,_],
-  [_,_,_,_,_,O,D,M,M,O,L,L,L,L,L,L,L,L,L,L,L,O,M,M,D,O,_,_,_,_],
-  [_,_,_,_,_,_,_,_,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,_,_,_,_],
-  [_,_,_,_,_,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,O,D,M,M,M,M,M,M,M,M,M,M,M,M,D,O,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,O,D,D,M,M,M,M,M,M,M,M,D,D,O,_,_,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,O,O,D,D,D,D,D,D,D,D,O,O,_,_ ,_,_],
-  [_,_,_,_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,_,_ ,_ ,_ ,_]
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,C,_,C,_,C,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,C,C,C,C,C,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_ ,_ ,_ ,_,O,O,O,O,O,O,O,O,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,B,B,B,B,B,B,B,B,B,P,P,_,P,P,B,_,_,_,_,_,_,_,_ ,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,B,B,B,B,B,B,B,B,B,B,B,B,P,P,P,P,P,B,B,_,_,_,_,_,_,_,_ ,_,_,_],
+  [_,_,_,_,_,_,_,_,B,B,B,B,B,B,M,M,M,M,M,M,M,M,B,P,P,P,B,B,B,_,_,_,_,_,_ ,_,_,_,_],
+  [_,_,_,_,_,_,_,B,B,B,B,M,M,M,M,M,M,M,M,M,M,M,M,M,M,B,B,B,B,B,_,_,_,_,_,_,_,_ ,_],
+  [_,_,_,_,_,_,B,B,B,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,B,B,B,B,_,_,_,_,_,_ ,_,_],
+  [_,_,_,_,_,B,B,M,M,M,M,M,M,D,D,D,D,M,M,M,M,M,M,M,M,M,M,M,M,B,B,_,_ ,_,_,_,_,_,_ ,_],
+  [_,_,_,_,B,B,M,M,M,D,D,D,D,M,M,M,M,D,D,D,M,M,M,M,M,M,M,M,M,M,B,B,_,_ ,_ ,_,_,_,_],
+  [_,_,_,_,B,B,M,M,D,D,M,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,M,M,M,M,B,B,_,_ ,_ ,_,_,_,_],
+  [_,_,_,_,B,M,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,B,_,_,_,_,_,_ ,_],
+  [O,O,O,_,B,M,D,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,B,_,O,O,O],
+  [O,M,M,O,B,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,B,O,M,M,O],
+  [O,M,M,M,B,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,B,M,M,M,O],
+  [_,O,M,M,B,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,B,M,M,O,_],
+  [_,_,O,M,B,M,M,O,M,M,M,M,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,B,M,O,_,_],
+  [_,_,_,O,B,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,B,O,_,_],
+  [_,_,_,_,B,M,M,O,M,O,O,O,M,O,M,M,M,M,M,O,M,O,O,O,M,O,M,M,M,M,M,B,_,_,_],
+  [_,_,_,_,B,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,O,O,O,O,O,M,M,M,M,M,M,B,_,_,_],
+  [_,_,_,_,B,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,B,_,_,_],
+  [_,_,_,_,B,M,M,M,M,M,M,M,M,M,M,M,D,D,D,D,D,M,M,M,M,M,M,M,M,M,M,M,B,_,_ ,_],
+  [_,_,_,_,B,M,M,M,M,M,M,M,M,M,D,D,M,M,M,M,M,D,D,M,M,M,M,M,D,M,M,B,_,_,_],
+  [_,_,_,_,B,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,B,_,_,_],
+  [_,_,_,_,B,M,M,M,M,M,M,M,M,D,M,M,M,M,M,M,M,M,M,M,M,D,M,M,M,M,M,B,_,_,_],
+  [_,_,_,_,B,M,M,M,M,M,M,D,O,O,O,O,O,O,O,O,O,O,O,O,O,D,M,M,M,M,M,B,_,_,_],
+  [_,_,_,_,B,M,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,B,_,_,_],
+  [_,_,_,_,B,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,B,_,_,_],
+  [_,_,_,_,_,B,M,M,O,M,M,M,O,O,T,T,T,T,T,T,T,O,O,M,M,M,M,O,M,M,B,_,_,_],
+  [_,_,_,_,_,_,B,O,D,M,M,O,O,O,O,O,O,O,O,O,O,O,O,O,M,M,D,O,O,B,_,_,_],
+  [_,_,_,_,_,_,_,B,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,B,_,_ ,_,_],
+  [_,_,_,_,_,_,_,B,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,B,_,_ ,_,_],
+  [_,_,_,_,_,_,_,B,D,M,O,L,L,L,L,L,L,L,L,L,L,L,L,L,O,M,D,B,_,_ ,_,_],
+  [_,_,_,_,_,B,B,D,M,M,O,L,L,L,L,L,L,L,L,L,L,L,O,M,M,D,B,B,_,_ ,_,_],
+  [_,_,_,_,_,B,B,B,B,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,B,B,B,B,_,_ ,_,_]
+];
+
+export const LEVEL_13_DATA: number[][] = [
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,G,G,G,G,G,G,G,G,G,G,G,G,G,G,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,G,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,H,O,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,O,H,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,H,H,O,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,O,H,H,_,_,_,_,_,_],
+  [_,_,_,_,_,H,H,H,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,H,H,H,_,_,_,_,_],
+  [_,_,_,_,_,H,H,H,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,H,H,H,_,_,_,_,_],
+  [_,_,_,_,H,H,H,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,H,H,H,_,_,_,_],
+  [_,_,_,_,H,H,O,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,M,M,O,O,O,O,O,M,M,O,H,H,_,_,_,_,_,_],
+  [_,_ ,_ ,H,H,O,M,M,O,W,W,W,W,W,O,M,M,M,M,M,M,M,O,W,W,W,W,W,O,M,O,H,H,_,_,_,_,_,_],
+  [_,_ ,_ ,H,O,M,M,O,W,O,O,O,W,O,M,M,M,M,M,M,M,O,W,O,O,O,W,O,M,O,H,_,_,_,_,_,_,_,_],
+  [_,_ ,_ ,H,O,M,M,O,W,O,O,O,W,O,M,M,M,M,M,M,M,O,W,O,O,O,W,O,M,O,H,_,_,_,_,_,_,_,_],
+  [_,_ ,_ ,H,O,M,M,O,W,W,W,W,W,O,M,M,M,M,M,M,M,O,W,W,W,W,W,O,M,O,H,_,_,_,_,_,_,_,_],
+  [_,_ ,_ ,_,O,M,M,M,O,O,O,O,O,M,M,M,M,M,M,M,M,M,O,O,O,O,O,M,M,O,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,M,P,P,P,P,P,P,M,M,M,M,M,M,M,M,M,P,P,P,P,P,P,M,O,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,P,P,P,P,P,P,P,P,M,M,M,M,M,M,P,P,P,P,P,P,P,P,M,O,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,P,P,P,P,P,P,P,P,M,M,M,M,M,M,P,P,P,P,P,P,P,P,M,O,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,O,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,O,M,M,M,M,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,M,M,M,M,M,O,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,O,M,M,M,O,T,T,T,T,T,T,T,T,T,T,T,T,O,M,M,M,M,M,O,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,O,M,M,M,O,T,T,T,T,T,T,T,T,T,T,T,T,O,M,M,M,M,M,O,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,O,M,M,M,O,O,O,O,O,O,O,O,O,O,O,O,M,M,M,M,M,O,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_,_,_,_,_,_,_,_,_ ,_,_],
+  [_,_,_,_,_,_,_,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,_,_,_,_ ,_ ,_ ,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,O,O,M,M,M,M,M,M,M,M,M,M,M,M,M,M,O,O,_,_,_,_ ,_ ,_ ,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,O,O,O,O,O,O,O,O,O,O,O,O,O,O,_,_,_,_,_,_ ,_ ,_ ,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+  [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]
 ];
 
 export const SPIDER_64_DATA: number[][] = Array(32).fill(0).map((_, y) => 
