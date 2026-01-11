@@ -50,8 +50,8 @@ interface Firefly {
 const MAX_BALLS = 16;
 const SPEED_STORAGE_KEY = 'wizard-breaker-speed-multiplier';
 const COMPLETED_LEVELS_KEY = 'ogro-buchon-completed-levels-list';
-const OGRA_PASSWORD = "OGRA113354";
-const NATITA_PASSWORD = "NATITA229963";
+const OGRA_PASSWORD = "NATITA113354";
+const NATITA_PASSWORD = "NATITA113354";
 
 export const Game: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1212,7 +1212,7 @@ export const Game: React.FC = () => {
                 </button>
                 <a 
                   onClick={() => playSound('select')}
-                  href={activeSpecialModal === 'ogra' ? "https://ko-fi.com/s/bd26f06f93" : "https://ko-fi.com/s/9aab01ec2a"} 
+                  href="https://ko-fi.com/s/bd26f06f93" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 text-[8px] font-bold border-4 border-[#00FFFF] rounded-none transition-all active:translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] text-center flex items-center justify-center gap-2"
@@ -1302,3 +1302,5 @@ export const Game: React.FC = () => {
     </div>
   );
 };
+
+export default Game;
